@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -34,21 +35,23 @@ export function MCPList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {mockMCPs.map((mcp) => (
-        <Card key={mcp.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle>{mcp.title}</CardTitle>
-            <CardDescription>{mcp.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {mcp.tags.map((tag) => (
-                <Badge key={tag} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <Link href={`/mcp/${mcp.id}`} key={mcp.id}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <CardHeader>
+              <CardTitle>{mcp.title}</CardTitle>
+              <CardDescription>{mcp.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {mcp.tags.map((tag) => (
+                  <Badge key={tag} variant="outline">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );

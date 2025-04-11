@@ -1,6 +1,14 @@
+"use client";
+
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/copy-button";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // This will be replaced with actual data fetching
 const mockMCPs = {
@@ -91,6 +99,15 @@ export default function MCPDetailPage({ params }: { params: { id: string } }) {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="space-y-8">
+        <div className="flex items-center">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mr-2">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back to MCPs
+            </Button>
+          </Link>
+        </div>
+
         <div>
           <h1 className="text-4xl font-bold">{mcp.title}</h1>
           <p className="text-lg text-muted-foreground mt-2">{mcp.description}</p>
@@ -115,10 +132,21 @@ export default function MCPDetailPage({ params }: { params: { id: string } }) {
                 <CardTitle>TypeScript Implementation</CardTitle>
                 <CardDescription>Example code using TypeScript</CardDescription>
               </CardHeader>
-              <CardContent>
-                <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <code>{mcp.codeExamples.typescript}</code>
-                </pre>
+              <CardContent className="relative p-0">
+                <div className="relative">
+                  <CopyButton text={mcp.codeExamples.typescript} />
+                  <SyntaxHighlighter
+                    language="typescript"
+                    style={oneDark}
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: "0.5rem",
+                      padding: "1rem",
+                    }}
+                  >
+                    {mcp.codeExamples.typescript}
+                  </SyntaxHighlighter>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -128,10 +156,21 @@ export default function MCPDetailPage({ params }: { params: { id: string } }) {
                 <CardTitle>Python Implementation</CardTitle>
                 <CardDescription>Example code using Python</CardDescription>
               </CardHeader>
-              <CardContent>
-                <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <code>{mcp.codeExamples.python}</code>
-                </pre>
+              <CardContent className="relative p-0">
+                <div className="relative">
+                  <CopyButton text={mcp.codeExamples.python} />
+                  <SyntaxHighlighter
+                    language="python"
+                    style={oneDark}
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: "0.5rem",
+                      padding: "1rem",
+                    }}
+                  >
+                    {mcp.codeExamples.python}
+                  </SyntaxHighlighter>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -141,10 +180,21 @@ export default function MCPDetailPage({ params }: { params: { id: string } }) {
                 <CardTitle>Shell Implementation</CardTitle>
                 <CardDescription>Example code using cURL</CardDescription>
               </CardHeader>
-              <CardContent>
-                <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <code>{mcp.codeExamples.shell}</code>
-                </pre>
+              <CardContent className="relative p-0">
+                <div className="relative">
+                  <CopyButton text={mcp.codeExamples.shell} />
+                  <SyntaxHighlighter
+                    language="bash"
+                    style={oneDark}
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: "0.5rem",
+                      padding: "1rem",
+                    }}
+                  >
+                    {mcp.codeExamples.shell}
+                  </SyntaxHighlighter>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
