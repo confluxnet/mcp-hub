@@ -13,9 +13,9 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold">MCP Dog</h1>
+            <h1 className="text-4xl font-bold">MCP Hub</h1>
             <p className="text-lg text-muted-foreground">
-              Discover and integrate Model Context Protocols
+              An all-in-one gateway to explore, filter, and integrate Web3 MCP tools
             </p>
           </div>
 

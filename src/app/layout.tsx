@@ -7,8 +7,8 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MCP Dog - Model Context Protocol Gateway",
-  description: "Discover and integrate Model Context Protocols for your web3 applications",
+  title: "MCP Hub - Web3 Model Context Protocol Gateway",
+  description: "An all-in-one gateway to explore, filter, and integrate Web3 MCP tools",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
