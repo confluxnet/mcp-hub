@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL_NAME = "gemini-2.0-flash";
@@ -11,32 +7,19 @@ const MODEL_NAME = "gemini-2.0-flash";
 export async function POST(request: NextRequest) {
   try {
     if (!GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: "Gemini API 키가 설정되지 않았습니다." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Gemini API 키가 설정되지 않았습니다." }, { status: 500 });
     }
 
     // 요청 데이터 파싱
     const data = await request.json();
     const { transactions, address } = data;
 
-    if (
-      !transactions ||
-      !Array.isArray(transactions) ||
-      transactions.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "유효한 트랜잭션 배열이 필요합니다" },
-        { status: 400 }
-      );
+    if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+      return NextResponse.json({ error: "유효한 트랜잭션 배열이 필요합니다" }, { status: 400 });
     }
 
     if (!address) {
-      return NextResponse.json(
-        { error: "분석 대상 주소가 필요합니다" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "분석 대상 주소가 필요합니다" }, { status: 400 });
     }
 
     // Gemini API 초기화
@@ -101,9 +84,7 @@ Transaction history data summary:`;
       // 로그 요약
       const logs = meta.logMessages || [];
       const logSummary =
-        logs.length > 10
-          ? [...logs.slice(0, 5), "... (생략됨) ...", ...logs.slice(-5)]
-          : logs;
+        logs.length > 10 ? [...logs.slice(0, 5), "... (생략됨) ...", ...logs.slice(-5)] : logs;
 
       return {
         index,
@@ -129,9 +110,7 @@ Transaction history data summary:`;
               {
                 text: `${systemPrompt}\n\n이 주소(${address})에 대한 최근 ${
                   transactions.length
-                }개 트랜잭션을 분석해 주세요: ${JSON.stringify(
-                  transactionsSummary
-                )}`,
+                }개 트랜잭션을 분석해 주세요: ${JSON.stringify(transactionsSummary)}`,
               },
             ],
           },
@@ -144,15 +123,14 @@ Transaction history data summary:`;
       });
 
       const response = result.response;
-      const analysisText =
-        response.text() || "트랜잭션 분석 결과를 생성할 수 없습니다.";
+      const analysisText = response.text() || "트랜잭션 분석 결과를 생성할 수 없습니다.";
 
       let insights;
 
       try {
         // JSON 파싱 시도를 제거하고 텍스트 그대로 사용
         insights = analysisText;
-      } catch (e) {
+      } catch {
         // 오류 발생 시 원본 텍스트 사용
         insights = analysisText;
       }
@@ -162,9 +140,7 @@ Transaction history data summary:`;
       console.error("LLM 분석 중 오류:", aiError);
       return NextResponse.json(
         {
-          error: `트랜잭션 분석을 수행할 수 없습니다: ${
-            (aiError as Error).message
-          }`,
+          error: `트랜잭션 분석을 수행할 수 없습니다: ${(aiError as Error).message}`,
         },
         { status: 500 }
       );
