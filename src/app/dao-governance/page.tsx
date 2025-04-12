@@ -113,6 +113,7 @@ export default function DaoGovernance() {
 
   // Handle responsive sidebar
   useEffect(() => {
+    loadMcps();
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -138,23 +139,18 @@ export default function DaoGovernance() {
         const mcpsData = await mcpPool.getMCP(0);
         console.log(mcpsData);
 
-        const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
+        const formattedMcps: any = mcpsData.map((mcp: any) => ({
           id: mcp.id,
           title: mcp.title,
           description: mcp.description,
-          tags: mcp.tags || [],
-          icon: mcp.icon,
-          category: mcp.category,
-          usageCount: mcp.usageCount.toNumber(),
-          rating: mcp.rating,
-          price: parseFloat(ethers.formatEther(mcp.price)),
-          owner: mcp.owner,
+          usageCount: 0,
+          price: 3,
+          owner: mcp.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
           approved: mcp.approved,
           active: mcp.active,
-          apiEndpoints: mcp.apiEndpoints || [],
-          revenue: parseFloat(ethers.formatEther(mcp.revenue)),
-          codeExamples: mcp.codeExamples,
+          apiEndpoints: mcp.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
         }));
+        console.log("[DEBUG] formattedMcps", formattedMcps);
 
         setMcps(formattedMcps);
         setPendingMcps(formattedMcps.filter((mcp) => !mcp.approved));
@@ -650,15 +646,6 @@ export default function DaoGovernance() {
                             <CardTitle className="text-lg">{mcp.title}</CardTitle>
                             <CardDescription>{mcp.description}</CardDescription>
                           </CardHeader>
-                          <CardContent>
-                            <div className="flex flex-wrap gap-2">
-                              {mcp.tags.map((tag) => (
-                                <Badge key={tag} variant="secondary">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          </CardContent>
                         </Card>
                       ))}
                     </div>
