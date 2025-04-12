@@ -30,6 +30,9 @@ import { useRouter } from "next/navigation";
 import mcpsData from "@/data/mockMcps.json";
 import { useWallet } from "@/hooks/useWallet";
 
+// Add dynamic export configuration
+export const dynamic = "force-dynamic";
+
 export default function CreateRecipePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -443,9 +446,8 @@ export default function CreateRecipePage() {
                         }`}
                       >
                         <Checkbox
-                          id={`mcp-${mcp.id}`}
                           checked={selectedMcps.includes(mcp.id)}
-                          onCheckedChange={() => toggleMcpSelection(mcp.id)}
+                          onChange={() => toggleMcpSelection(mcp.id)}
                         />
                         <div className="flex-1">
                           <Label

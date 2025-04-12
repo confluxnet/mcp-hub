@@ -265,7 +265,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     };
 
     localStorage.setItem("walletState", JSON.stringify(serializableState));
-  }, [walletState.account, walletState.balance]);
+  }, [walletState.account, walletState.balance, connectWallet]);
 
   const value = {
     walletState,

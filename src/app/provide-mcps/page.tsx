@@ -67,12 +67,6 @@ interface MetaMaskProvider extends Eip1193Provider {
   isMetaMask?: boolean;
 }
 
-declare global {
-  interface Window {
-    ethereum?: Record<string, unknown>;
-  }
-}
-
 // MCP Type for Firestore
 interface MCPType {
   title: string;

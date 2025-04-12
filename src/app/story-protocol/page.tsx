@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -19,14 +19,18 @@ import { TagFilter } from "@/components/tag-filter";
 import { Search } from "@/components/search";
 import { PlusCircle, Wallet, AlertTriangle, Loader2 } from "lucide-react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 
 // Import mock data
 import bundlesData from "@/data/mockStoryProtocolBundles.json";
 import { useWallet } from "@/hooks/useWallet";
 
-export default function StoryProtocolPage() {
+// Add dynamic export configuration
+export const dynamic = "force-dynamic";
+
+// Create a component that uses useSearchParams
+function StoryProtocolContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -35,6 +39,7 @@ export default function StoryProtocolPage() {
   const { isConnected, connectWallet } = useWallet();
   const router = useRouter();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
 
   // Get all unique tags from bundles
   const allTags = Array.from(new Set(bundlesData.bundles.flatMap((bundle) => bundle.tags)));
@@ -54,6 +59,16 @@ export default function StoryProtocolPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Initialize search query from URL params
+  useEffect(() => {
+    if (searchParams) {
+      const query = searchParams.get("q");
+      if (query) {
+        setSearchQuery(query);
+      }
+    }
+  }, [searchParams]);
 
   // Filter bundles based on selected tags and search query
   useEffect(() => {
@@ -140,7 +155,7 @@ export default function StoryProtocolPage() {
                   <CardTitle>Filter Bundles</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Search onSearch={handleSearch} />
+                  <Search />
                   <div className="mt-4">
                     <TagFilter
                       tags={allTags}
@@ -242,5 +257,20 @@ export default function StoryProtocolPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function StoryProtocolPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <StoryProtocolContent />
+    </Suspense>
   );
 }

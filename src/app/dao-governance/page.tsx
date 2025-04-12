@@ -88,12 +88,6 @@ interface MetaMaskProvider extends Eip1193Provider {
   isMetaMask?: boolean;
 }
 
-declare global {
-  interface Window {
-    ethereum?: Record<string, unknown>;
-  }
-}
-
 export default function DaoGovernance() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);

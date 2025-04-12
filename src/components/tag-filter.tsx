@@ -1,31 +1,28 @@
 import { Badge } from "@/components/ui/badge";
 
-interface Tag {
-  name: string;
-  count: number;
+interface TagFilterProps {
+  tags: string[];
+  selectedTags: string[];
+  onSelectTag: (tag: string) => void;
 }
 
-// This will be replaced with actual data later
-const mockTags: Tag[] = [
-  { name: "AI", count: 12 },
-  { name: "Blockchain", count: 8 },
-  { name: "DeFi", count: 15 },
-  { name: "NFT", count: 6 },
-  { name: "Web3", count: 10 },
-];
-
-export function TagFilter() {
+export function TagFilter({ tags, selectedTags, onSelectTag }: TagFilterProps) {
   return (
     <div className="space-y-4">
       <h2 className="font-semibold text-lg">Tags</h2>
       <div className="space-y-2">
-        {mockTags.map((tag) => (
+        {tags.map((tag) => (
           <div
-            key={tag.name}
-            className="flex items-center justify-between p-2 hover:bg-accent rounded-lg cursor-pointer"
+            key={tag}
+            className={`flex items-center justify-between p-2 hover:bg-accent rounded-lg cursor-pointer ${
+              selectedTags.includes(tag) ? "bg-accent" : ""
+            }`}
+            onClick={() => onSelectTag(tag)}
           >
-            <span>{tag.name}</span>
-            <Badge variant="secondary">{tag.count}</Badge>
+            <span>{tag}</span>
+            <Badge variant={selectedTags.includes(tag) ? "default" : "secondary"}>
+              {selectedTags.includes(tag) ? "Selected" : "Select"}
+            </Badge>
           </div>
         ))}
       </div>

@@ -145,12 +145,6 @@ interface MetaMaskProvider extends Eip1193Provider {
   isMetaMask?: boolean;
 }
 
-declare global {
-  interface Window {
-    ethereum?: Record<string, unknown>;
-  }
-}
-
 // Remove mockTools array and use mockMcpsData.mcps instead
 const mockMcps = mockMcpsData.mcps;
 

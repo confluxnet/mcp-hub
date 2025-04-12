@@ -19,6 +19,9 @@ import { storyProtocol } from "@/lib/storyProtocol";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/hooks/useWallet";
 
+// Add dynamic export configuration
+export const dynamic = "force-dynamic";
+
 export default function PurchasePage({ params }: { params: { id: string } }) {
   const { client, setTxLoading, setTxHash, setTxName, isInitialized } = useStory();
   const {
@@ -135,7 +138,7 @@ export default function PurchasePage({ params }: { params: { id: string } }) {
                 <p className="text-sm text-muted-foreground">{licenseId}</p>
               </div>
               <div>
-                <p className="text-sm font-medium mb-1">What's Next?</p>
+                <p className="text-sm font-medium mb-1">What&apos;s Next?</p>
                 <p className="text-sm text-muted-foreground">
                   You can now use this recipe in your projects. The license entitles you to use all
                   the MCPs included in this recipe according to the license terms.
@@ -153,7 +156,9 @@ export default function PurchasePage({ params }: { params: { id: string } }) {
         <Card>
           <CardHeader>
             <CardTitle>Confirm Purchase</CardTitle>
-            <CardDescription>You're about to purchase a license for this recipe</CardDescription>
+            <CardDescription>
+              You&apos;re about to purchase a license for this recipe
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

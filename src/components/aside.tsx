@@ -61,7 +61,8 @@ export function Aside({ isSidebarOpen }: AsideProps) {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isSelected =
-              pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/");
+              pathname === item.href ||
+              (pathname && pathname.startsWith(item.href) && item.href !== "/");
 
             return (
               <Button
