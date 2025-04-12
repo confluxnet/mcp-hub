@@ -165,20 +165,30 @@ export default function DaoGovernance() {
       setLoading(true);
       // This is a placeholder - you'll need to implement the actual contract call
       try {
-        const mcpsData = await poolToUse.getMCP(0);
-        console.log(mcpsData);
+        // getMCP 함수가 단일 객체를 반환하는 것으로 보임
+        const mcpData = await poolToUse.getMCP(0);
+        console.log("MCP Data:", mcpData);
 
-        const formattedMcps: any = mcpsData.map((mcp: any) => ({
-          id: mcp.id,
-          title: mcp.title,
-          description: mcp.description,
-          usageCount: 0,
-          price: 3,
-          owner: mcp.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
-          approved: mcp.approved,
-          active: mcp.active,
-          apiEndpoints: mcp.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
-        }));
+        // 단일 객체를 배열로 변환하여 처리
+        const formattedMcps: MCP[] = [
+          {
+            id: mcpData.id || "0",
+            title: mcpData.name || "Untitled MCP",
+            description: mcpData.description || "No description available",
+            usageCount: 0,
+            price: 3,
+            owner: mcpData.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
+            approved: mcpData.approved || false,
+            active: mcpData.active || false,
+            apiEndpoints: mcpData.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
+            codeExamples: {},
+            tags: [],
+            icon: "",
+            category: "",
+            revenue: 0,
+          },
+        ];
+
         console.log("[DEBUG] formattedMcps", formattedMcps);
 
         setMcps(formattedMcps);

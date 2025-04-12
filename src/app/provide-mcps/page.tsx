@@ -244,7 +244,13 @@ export default function ProvideMcps() {
 
       // Convert price to Wei
       const priceInWei = ethers.parseEther(selectedMcp.price.toString());
-
+      console.log("[DEBUG] priceInWei", priceInWei);
+      console.log("[DEBUG] selectedMcp.apiEndpoints", selectedMcp.apiEndpoints);
+      console.log("[DEBUG] selectedMcp.codeExamples", selectedMcp.codeExamples);
+      console.log("[DEBUG] selectedMcp.title", selectedMcp.title);
+      console.log("[DEBUG] selectedMcp.description", selectedMcp.description);
+      console.log("[DEBUG] selectedMcp.price", selectedMcp.price);
+      console.log("[DEBUG] selectedMcp.allParameters", selectedMcp.allParameters);
       // Submit MCP to the contract
       const tx = await mcpPool.registerMCP(
         selectedMcp.title,
