@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,19 +24,22 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { storyProtocol } from "@/lib/storyProtocol";
 import { useStory } from "@/lib/context/StoryContext";
-import { useWallet } from "@/components/providers/SolanaProvider";
 import { useRouter } from "next/navigation";
 
 // Import mock data
 import mcpsData from "@/data/mockMcps.json";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function CreateRecipePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const { isConnected, connecting, connectWallet, openWalletModal, account } = useWallet();
+  const {
+    isConnected,
+    walletState: { account },
+  } = useWallet();
   const router = useRouter();
   const { client, isInitialized } = useStory();
-  
+
   // Recipe form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -38,8 +48,8 @@ export default function CreateRecipePage() {
   const [icon, setIcon] = useState("📚");
   const [price, setPrice] = useState(0);
   const [selectedMcps, setSelectedMcps] = useState<string[]>([]);
-  const [steps, setSteps] = useState<{name: string; description: string; mcpId: string}[]>([
-    { name: "", description: "", mcpId: "" }
+  const [steps, setSteps] = useState<{ name: string; description: string; mcpId: string }[]>([
+    { name: "", description: "", mcpId: "" },
   ]);
   const [tsCode, setTsCode] = useState("");
   const [pyCode, setPyCode] = useState("");
@@ -50,16 +60,17 @@ export default function CreateRecipePage() {
 
   // Filter for MCPs
   const [mcpFilter, setMcpFilter] = useState("");
-  
+
   // Filtered MCPs
   const filteredMcps = mcpsData.mcps.filter(
-    mcp => mcp.title.toLowerCase().includes(mcpFilter.toLowerCase()) ||
-           mcp.description.toLowerCase().includes(mcpFilter.toLowerCase())
+    (mcp) =>
+      mcp.title.toLowerCase().includes(mcpFilter.toLowerCase()) ||
+      mcp.description.toLowerCase().includes(mcpFilter.toLowerCase())
   );
 
   // Get MCP by ID
   const getMcpById = (id: string) => {
-    return mcpsData.mcps.find(mcp => mcp.id === id);
+    return mcpsData.mcps.find((mcp) => mcp.id === id);
   };
 
   // Handle responsive sidebar
@@ -88,12 +99,12 @@ export default function CreateRecipePage() {
   };
 
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const toggleMcpSelection = (mcpId: string) => {
     if (selectedMcps.includes(mcpId)) {
-      setSelectedMcps(selectedMcps.filter(id => id !== mcpId));
+      setSelectedMcps(selectedMcps.filter((id) => id !== mcpId));
     } else {
       setSelectedMcps([...selectedMcps, mcpId]);
     }
@@ -105,9 +116,9 @@ export default function CreateRecipePage() {
 
   const updateStep = (index: number, field: string, value: string) => {
     const updatedSteps = [...steps];
-    updatedSteps[index] = { 
-      ...updatedSteps[index], 
-      [field]: value 
+    updatedSteps[index] = {
+      ...updatedSteps[index],
+      [field]: value,
     };
     setSteps(updatedSteps);
   };
@@ -121,25 +132,25 @@ export default function CreateRecipePage() {
   };
 
   const { setTxLoading, setTxHash, setTxName, setCurrentIpId, setLicenseTermsId } = useStory();
-  
+
   // If wallet disconnects during the process, go back to recipe listing page
   useEffect(() => {
-    if (!isConnected && !connecting) {
-      router.push('/story-protocol');
+    if (!isConnected) {
+      router.push("/story-protocol");
     }
-  }, [isConnected, connecting, router]);
-  
+  }, [isConnected, router]);
+
   const handleSubmit = async () => {
     if (!isConnected || !client) {
       setError("Please connect your wallet to use Story Protocol");
       return;
     }
-    
+
     setIsSubmitting(true);
     setTxLoading(true);
     setTxName("Registering Recipe as IP Asset");
     setError(null);
-    
+
     try {
       // Prepare the metadata for the recipe
       const recipeMetadata = {
@@ -152,32 +163,28 @@ export default function CreateRecipePage() {
         codeExamples: {
           typescript: tsCode,
           python: pyCode,
-          shell: shellCode
-        }
+          shell: shellCode,
+        },
       };
-      
+
       // Register the recipe on Story Protocol and list it in the marketplace
-      const result = await storyProtocol.createAndRegisterRecipe(
-        client,
-        {
-          metadata: recipeMetadata,
-          ownerAddress: account as `0x${string}`
-        }
-      );
-      
+      const result = await storyProtocol.createAndRegisterRecipe(client, {
+        metadata: recipeMetadata,
+        ownerAddress: account as `0x${string}`,
+      });
+
       console.log("Registration result:", result);
-      
+
       if (result.success) {
         // Store the created IP asset and license terms IDs in context
         setCurrentIpId(result.ipId as `0x${string}`);
         setLicenseTermsId(result.licenseTermsId as string);
-        
         // Set transaction hash to show success notification
-        setTxHash(result.ipId);
+        setTxHash(result.ipId as string);
         setTxLoading(false);
-        
+
         setShowSuccess(true);
-        
+
         // Reset the form after 3 seconds
         setTimeout(() => {
           setShowSuccess(false);
@@ -216,57 +223,21 @@ export default function CreateRecipePage() {
           }`}
         >
           <div className="max-w-md mx-auto mt-12">
-            <Link href="/story-protocol" className="inline-flex items-center text-sm text-muted-foreground mb-6">
+            <Link
+              href="/story-protocol"
+              className="inline-flex items-center text-sm text-muted-foreground mb-6"
+            >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to Story Protocol
             </Link>
-            
+
             <h1 className="text-3xl font-bold mb-6">Create MCP Recipe</h1>
-            
-            <Card className="border-2 border-dashed p-6">
-              <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
-                <div className="bg-primary/10 p-4 rounded-full">
-                  <Wallet className="h-12 w-12 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Connect Your Wallet</h3>
-                  <p className="text-muted-foreground">
-                    You need to connect your wallet to create and register a recipe.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
-                  <Button 
-                    className="w-full" 
-                    size="lg" 
-                    onClick={openWalletModal}
-                    disabled={connecting}
-                  >
-                    {connecting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="mr-2 h-4 w-4" />
-                        Connect Wallet
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg" asChild>
-                    <Link href="/story-protocol">
-                      Back to Story Protocol
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </Card>
           </div>
         </main>
       </div>
     );
   }
-  
+
   // Show loading while Story Protocol client initializes
   if (!isInitialized) {
     return (
@@ -285,13 +256,16 @@ export default function CreateRecipePage() {
           }`}
         >
           <div className="max-w-md mx-auto mt-12">
-            <Link href="/story-protocol" className="inline-flex items-center text-sm text-muted-foreground mb-6">
+            <Link
+              href="/story-protocol"
+              className="inline-flex items-center text-sm text-muted-foreground mb-6"
+            >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to Story Protocol
             </Link>
-            
+
             <h1 className="text-3xl font-bold mb-6">Create MCP Recipe</h1>
-            
+
             <Card className="p-12">
               <div className="flex flex-col items-center justify-center text-center space-y-4">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -325,14 +299,18 @@ export default function CreateRecipePage() {
       >
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <Link href="/story-protocol" className="inline-flex items-center text-sm text-muted-foreground mb-4">
+            <Link
+              href="/story-protocol"
+              className="inline-flex items-center text-sm text-muted-foreground mb-4"
+            >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to Story Protocol
             </Link>
             <h1 className="text-3xl font-bold mb-2">Create MCP Recipe</h1>
             <p className="text-muted-foreground">
               Create a recipe that bundles multiple MCPs together with step-by-step instructions.
-              Your recipe will be registered as intellectual property on Story Protocol and can be sold to others.
+              Your recipe will be registered as intellectual property on Story Protocol and can be
+              sold to others.
             </p>
           </div>
 
@@ -344,13 +322,11 @@ export default function CreateRecipePage() {
               </AlertDescription>
             </Alert>
           )}
-          
+
           {error && (
             <Alert className="mb-6 border-red-500 bg-red-500/10">
               <AlertTriangle className="h-4 w-4 text-red-500" />
-              <AlertDescription className="text-red-500">
-                {error}
-              </AlertDescription>
+              <AlertDescription className="text-red-500">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -366,16 +342,14 @@ export default function CreateRecipePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Recipe Details</CardTitle>
-                  <CardDescription>
-                    Provide basic information about your MCP recipe
-                  </CardDescription>
+                  <CardDescription>Provide basic information about your MCP recipe</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
-                    <Input 
-                      id="title" 
-                      placeholder="e.g., NFT Creation & IP Registration Bundle" 
+                    <Input
+                      id="title"
+                      placeholder="e.g., NFT Creation & IP Registration Bundle"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
@@ -383,9 +357,9 @@ export default function CreateRecipePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Describe what your recipe does and why it's valuable" 
+                    <Textarea
+                      id="description"
+                      placeholder="Describe what your recipe does and why it's valuable"
                       className="min-h-24"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -394,9 +368,9 @@ export default function CreateRecipePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="icon">Icon</Label>
-                    <Input 
-                      id="icon" 
-                      placeholder="e.g., 📚 or 🎭 or 📄" 
+                    <Input
+                      id="icon"
+                      placeholder="e.g., 📚 or 🎭 or 📄"
                       value={icon}
                       onChange={(e) => setIcon(e.target.value)}
                     />
@@ -404,10 +378,10 @@ export default function CreateRecipePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (in USD)</Label>
-                    <Input 
-                      id="price" 
-                      type="number" 
-                      placeholder="e.g., 25" 
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="e.g., 25"
                       value={price || ""}
                       onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                     />
@@ -416,18 +390,14 @@ export default function CreateRecipePage() {
                   <div className="space-y-2">
                     <Label htmlFor="tags">Tags</Label>
                     <div className="flex space-x-2">
-                      <Input 
-                        id="tags" 
-                        placeholder="e.g., NFT, IP, Blockchain" 
+                      <Input
+                        id="tags"
+                        placeholder="e.g., NFT, IP, Blockchain"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addTag()}
+                        onKeyDown={(e) => e.key === "Enter" && addTag()}
                       />
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={addTag}
-                      >
+                      <Button variant="outline" size="icon" onClick={addTag}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -435,10 +405,7 @@ export default function CreateRecipePage() {
                       {tags.map((tag, index) => (
                         <Badge key={index} variant="secondary" className="flex items-center gap-1">
                           {tag}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => removeTag(tag)} 
-                          />
+                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
                         </Badge>
                       ))}
                       {tags.length === 0 && (
@@ -454,16 +421,14 @@ export default function CreateRecipePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Select MCPs</CardTitle>
-                  <CardDescription>
-                    Choose which MCPs to include in your recipe
-                  </CardDescription>
+                  <CardDescription>Choose which MCPs to include in your recipe</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="mcp-filter">Filter MCPs</Label>
-                    <Input 
-                      id="mcp-filter" 
-                      placeholder="Search by name or description" 
+                    <Input
+                      id="mcp-filter"
+                      placeholder="Search by name or description"
                       value={mcpFilter}
                       onChange={(e) => setMcpFilter(e.target.value)}
                     />
@@ -471,19 +436,22 @@ export default function CreateRecipePage() {
 
                   <div className="space-y-2 max-h-96 overflow-y-auto border rounded-md p-4">
                     {filteredMcps.map((mcp) => (
-                      <div 
-                        key={mcp.id} 
+                      <div
+                        key={mcp.id}
                         className={`p-3 rounded-md flex items-start gap-3 mb-2 border ${
-                          selectedMcps.includes(mcp.id) ? 'border-primary' : 'border-border'
+                          selectedMcps.includes(mcp.id) ? "border-primary" : "border-border"
                         }`}
                       >
-                        <Checkbox 
-                          id={`mcp-${mcp.id}`} 
+                        <Checkbox
+                          id={`mcp-${mcp.id}`}
                           checked={selectedMcps.includes(mcp.id)}
                           onCheckedChange={() => toggleMcpSelection(mcp.id)}
                         />
                         <div className="flex-1">
-                          <Label htmlFor={`mcp-${mcp.id}`} className="text-base font-medium cursor-pointer">
+                          <Label
+                            htmlFor={`mcp-${mcp.id}`}
+                            className="text-base font-medium cursor-pointer"
+                          >
                             <span className="mr-2">{mcp.icon}</span>
                             {mcp.title}
                           </Label>
@@ -514,9 +482,9 @@ export default function CreateRecipePage() {
                           <Badge key={mcpId} className="flex items-center gap-1 py-1.5">
                             <span>{mcp.icon}</span>
                             {mcp.title}
-                            <X 
-                              className="h-3 w-3 cursor-pointer ml-1" 
-                              onClick={() => toggleMcpSelection(mcpId)} 
+                            <X
+                              className="h-3 w-3 cursor-pointer ml-1"
+                              onClick={() => toggleMcpSelection(mcpId)}
                             />
                           </Badge>
                         ) : null;
@@ -542,10 +510,10 @@ export default function CreateRecipePage() {
                   {steps.map((step, index) => (
                     <div key={index} className="p-4 border rounded-md space-y-3 relative">
                       <div className="absolute top-3 right-3">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
                           onClick={() => removeStep(index)}
                         >
                           <X className="h-4 w-4" />
@@ -555,21 +523,21 @@ export default function CreateRecipePage() {
                         <div className="flex items-center justify-center rounded-full bg-accent w-6 h-6 text-center text-sm flex-shrink-0">
                           {index + 1}
                         </div>
-                        <Input 
-                          placeholder="Step Name" 
+                        <Input
+                          placeholder="Step Name"
                           value={step.name}
                           onChange={(e) => updateStep(index, "name", e.target.value)}
                         />
                       </div>
-                      <Textarea 
-                        placeholder="Step Description" 
+                      <Textarea
+                        placeholder="Step Description"
                         className="min-h-20"
                         value={step.description}
                         onChange={(e) => updateStep(index, "description", e.target.value)}
                       />
                       <div className="space-y-2">
                         <Label htmlFor={`step-mcp-${index}`}>Select MCP for this step</Label>
-                        <select 
+                        <select
                           id={`step-mcp-${index}`}
                           className="w-full p-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                           value={step.mcpId}
@@ -579,7 +547,9 @@ export default function CreateRecipePage() {
                           {selectedMcps.map((mcpId) => {
                             const mcp = getMcpById(mcpId);
                             return mcp ? (
-                              <option key={mcpId} value={mcpId}>{mcp.icon} {mcp.title}</option>
+                              <option key={mcpId} value={mcpId}>
+                                {mcp.icon} {mcp.title}
+                              </option>
                             ) : null;
                           })}
                         </select>
@@ -612,8 +582,8 @@ export default function CreateRecipePage() {
                     <TabsContent value="typescript">
                       <div className="space-y-2">
                         <Label htmlFor="ts-code">TypeScript Example</Label>
-                        <Textarea 
-                          id="ts-code" 
+                        <Textarea
+                          id="ts-code"
                           placeholder="// TypeScript example code here"
                           className="font-mono min-h-60"
                           value={tsCode}
@@ -630,8 +600,8 @@ export default function CreateRecipePage() {
                     <TabsContent value="python">
                       <div className="space-y-2">
                         <Label htmlFor="py-code">Python Example</Label>
-                        <Textarea 
-                          id="py-code" 
+                        <Textarea
+                          id="py-code"
                           placeholder="# Python example code here"
                           className="font-mono min-h-60"
                           value={pyCode}
@@ -648,8 +618,8 @@ export default function CreateRecipePage() {
                     <TabsContent value="shell">
                       <div className="space-y-2">
                         <Label htmlFor="shell-code">Shell Example</Label>
-                        <Textarea 
-                          id="shell-code" 
+                        <Textarea
+                          id="shell-code"
                           placeholder="# Shell example commands here"
                           className="font-mono min-h-60"
                           value={shellCode}
@@ -670,8 +640,8 @@ export default function CreateRecipePage() {
           </Tabs>
 
           <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t flex justify-end">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               onClick={handleSubmit}
               disabled={isSubmitting || !title || !description || selectedMcps.length === 0}
             >

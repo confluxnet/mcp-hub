@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +18,13 @@ import { Aside } from "@/components/aside";
 import { TagFilter } from "@/components/tag-filter";
 import { Search } from "@/components/search";
 import { PlusCircle, Wallet, AlertTriangle, Loader2 } from "lucide-react";
-import { useWallet } from "@/components/providers/SolanaProvider";
+
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 
 // Import mock data
 import bundlesData from "@/data/mockStoryProtocolBundles.json";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function StoryProtocolPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -24,14 +32,12 @@ export default function StoryProtocolPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [bundles, setBundles] = useState(bundlesData.bundles);
-  const { isConnected, connecting, connectWallet, openWalletModal } = useWallet();
+  const { isConnected, connectWallet } = useWallet();
   const router = useRouter();
   const { toast } = useToast();
 
   // Get all unique tags from bundles
-  const allTags = Array.from(
-    new Set(bundlesData.bundles.flatMap((bundle) => bundle.tags))
-  );
+  const allTags = Array.from(new Set(bundlesData.bundles.flatMap((bundle) => bundle.tags)));
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -97,72 +103,6 @@ export default function StoryProtocolPage() {
     router.push("/story-protocol/create");
   };
 
-  // If not connected, show connection screen
-  if (!isConnected) {
-    return (
-      <div className="relative">
-        <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
-        <Aside isSidebarOpen={isSidebarOpen} />
-
-        {/* Overlay for mobile */}
-        {isMobile && isSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
-        )}
-
-        <main
-          className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
-            isSidebarOpen ? "md:ml-64" : ""
-          }`}
-        >
-          <div className="max-w-md mx-auto mt-12">
-            <Card className="border-2 border-dashed p-6">
-              <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
-                <div className="bg-primary/10 p-4 rounded-full">
-                  <Wallet className="h-12 w-12 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Connect Your Wallet</h3>
-                  <p className="text-muted-foreground">
-                    Story Protocol requires a wallet connection to access its features.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
-                  <Button 
-                    className="w-full" 
-                    size="lg" 
-                    onClick={openWalletModal}
-                    disabled={connecting}
-                  >
-                    {connecting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="mr-2 h-4 w-4" />
-                        Connect Wallet
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg" asChild>
-                    <Link href="/">
-                      Return to Home
-                    </Link>
-                  </Button>
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  <span>Your wallet is used to interact with the Story Protocol blockchain</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
@@ -183,8 +123,8 @@ export default function StoryProtocolPage() {
             <div>
               <h1 className="text-3xl font-bold mb-2">Story Protocol MCP Recipes</h1>
               <p className="text-muted-foreground">
-                Curated recipes that bundle multiple MCPs together with step-by-step integration guides, 
-                registered as IP on Story Protocol.
+                Curated recipes that bundle multiple MCPs together with step-by-step integration
+                guides, registered as IP on Story Protocol.
               </p>
             </div>
             <Button className="mt-4 lg:mt-0" onClick={handleCreateRecipe}>
@@ -210,15 +150,16 @@ export default function StoryProtocolPage() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>What are MCP Recipes?</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    MCP Recipes are step-by-step guides that combine multiple MCPs to solve specific use cases. 
-                    Each recipe is registered as intellectual property on Story Protocol, allowing creators to:
+                    MCP Recipes are step-by-step guides that combine multiple MCPs to solve specific
+                    use cases. Each recipe is registered as intellectual property on Story Protocol,
+                    allowing creators to:
                   </p>
                   <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
                     <li>Bundle existing MCPs into valuable workflows</li>
@@ -227,11 +168,13 @@ export default function StoryProtocolPage() {
                     <li>Receive royalties when others use their recipes</li>
                   </ul>
                   <div className="flex flex-col space-y-2 mt-4">
-                    <Button onClick={handleCreateRecipe}>
-                      Create Your Own Recipe
-                    </Button>
+                    <Button onClick={handleCreateRecipe}>Create Your Own Recipe</Button>
                     <Button variant="outline" asChild>
-                      <Link href="https://www.storyprotocol.xyz" target="_blank" rel="noopener noreferrer">
+                      <Link
+                        href="https://www.storyprotocol.xyz"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Learn About Story Protocol
                       </Link>
                     </Button>
@@ -243,7 +186,10 @@ export default function StoryProtocolPage() {
             <div className="lg:w-3/4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bundles.map((bundle) => (
-                  <Card key={bundle.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <Card
+                    key={bundle.id}
+                    className="overflow-hidden hover:shadow-md transition-shadow"
+                  >
                     <CardHeader>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-3xl">{bundle.icon}</span>
@@ -260,7 +206,7 @@ export default function StoryProtocolPage() {
                             </Badge>
                           ))}
                         </div>
-                        
+
                         <div className="space-y-1 mb-3">
                           <div className="text-sm font-medium">Integration Steps:</div>
                           <ul className="list-disc list-inside text-sm text-muted-foreground">
@@ -269,7 +215,7 @@ export default function StoryProtocolPage() {
                             ))}
                           </ul>
                         </div>
-                        
+
                         <div className="flex flex-wrap items-center justify-between text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <span>⭐ {bundle.rating}</span>
@@ -282,14 +228,10 @@ export default function StoryProtocolPage() {
                     </CardContent>
                     <CardFooter className="flex justify-between pt-0">
                       <Button variant="outline" className="w-1/2" asChild>
-                        <Link href={`/story-protocol/${bundle.id}`}>
-                          Details
-                        </Link>
+                        <Link href={`/story-protocol/${bundle.id}`}>Details</Link>
                       </Button>
                       <Button className="w-1/2" asChild>
-                        <Link href={`/story-protocol/${bundle.id}/purchase`}>
-                          Purchase
-                        </Link>
+                        <Link href={`/story-protocol/${bundle.id}/purchase`}>Purchase</Link>
                       </Button>
                     </CardFooter>
                   </Card>

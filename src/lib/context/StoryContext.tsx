@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { useWallet } from "@/components/providers/SolanaProvider";
+import { useWallet } from "@/hooks/useWallet";
 // Mock Story SDK until we can properly install the dependency
 interface Story {
   ipAsset: any;
@@ -13,8 +13,8 @@ const Story = {
   create: (config: any): Story => ({
     ipAsset: {},
     licenseTerms: {},
-    royalties: {}
-  })
+    royalties: {},
+  }),
 };
 import { Address } from "viem";
 import { SPG_NFT_CONTRACT_ADDRESS } from "../utils";
@@ -40,7 +40,10 @@ interface StoryContextType {
 const StoryContext = createContext<StoryContextType | undefined>(undefined);
 
 export function StoryProvider({ children }: { children: ReactNode }) {
-  const { isConnected, account } = useWallet();
+  const {
+    isConnected,
+    walletState: { account },
+  } = useWallet();
   const [client, setClient] = useState<Story | null>(null);
   const [txLoading, setTxLoading] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -53,7 +56,7 @@ export function StoryProvider({ children }: { children: ReactNode }) {
   // Initialize Story client when wallet is connected
   useEffect(() => {
     const initializeStoryClient = async () => {
-      if (isConnected && account && !client) {
+      if (isConnected() && account && !client) {
         try {
           // For mock purposes we're using a simple client
           // In a real implementation, this would interact with the actual Story Protocol SDK
@@ -61,10 +64,10 @@ export function StoryProvider({ children }: { children: ReactNode }) {
             chain: 1, // Ethereum mainnet for example
             wallet: { address: account },
             options: {
-              spgNftContract: SPG_NFT_CONTRACT_ADDRESS
-            }
+              spgNftContract: SPG_NFT_CONTRACT_ADDRESS,
+            },
           });
-          
+
           setClient(storyClient);
           setIsInitialized(true);
         } catch (error) {
@@ -81,7 +84,7 @@ export function StoryProvider({ children }: { children: ReactNode }) {
   }, [isConnected, account, client]);
 
   return (
-    <StoryContext.Provider 
+    <StoryContext.Provider
       value={{
         client,
         setClient,
@@ -97,7 +100,7 @@ export function StoryProvider({ children }: { children: ReactNode }) {
         setLicenseTermsId,
         derivativeIpId,
         setDerivativeIpId,
-        isInitialized
+        isInitialized,
       }}
     >
       {children}
@@ -115,14 +118,14 @@ export function useStory() {
 
 // Initialize Story Protocol client with wallet - legacy method, now handled in the provider
 export async function initializeStory(walletClient: any, chainId: number): Promise<Story> {
-  const chain = chainId;  
+  const chain = chainId;
   const story = Story.create({
     chain,
     wallet: walletClient,
     options: {
-      spgNftContract: SPG_NFT_CONTRACT_ADDRESS
-    }
+      spgNftContract: SPG_NFT_CONTRACT_ADDRESS,
+    },
   });
-  
+
   return story;
 }
