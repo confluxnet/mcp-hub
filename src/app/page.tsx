@@ -6,29 +6,18 @@ import SolanaProvider from "@/components/providers/SolanaProvider";
 import { Search } from "@/components/search";
 import { MCPList } from "@/components/mcp-list";
 import { TagFilter } from "@/components/tag-filter";
+import { MCPMarketplace } from "@/components/MCPMarketplace";
 
 export default function Home() {
   return (
     <SolanaProvider>
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold">MCP Hub</h1>
-            <p className="text-lg text-muted-foreground">
-              An all-in-one gateway to explore, filter, and integrate Web3 MCP tools
-            </p>
-          </div>
-
-          <Search />
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-1">
-              <TagFilter />
-            </div>
-            <div className="md:col-span-3">
-              <MCPList />
-            </div>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-4xl font-bold text-center mb-8">MCP Marketplace</h1>
+          <p className="text-xl text-center text-gray-300 mb-12">
+            Discover and use MCPs (Modular Computing Protocols) on the SAGA blockchain
+          </p>
+          <MCPMarketplace />
         </div>
       </main>
     </SolanaProvider>
