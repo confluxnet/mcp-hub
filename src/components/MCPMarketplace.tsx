@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ethers } from "ethers";
-import type { MetaMaskInpageProvider } from "@metamask/providers";
 import type { Eip1193Provider } from "ethers";
 import {
   Card,
@@ -18,7 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { InfoIcon, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { InfoIcon } from "lucide-react";
 
 // Import contract ABIs
 import SagaTokenABI from "../contracts/SagaToken.json";
@@ -103,14 +102,14 @@ interface MetaMaskProvider extends Eip1193Provider {
   isMetaMask?: boolean;
 }
 
-// Extend the Window interface using declaration merging
-interface Window {
-  ethereum?: Eip1193Provider;
+declare global {
+  interface Window {
+    ethereum?: Record<string, unknown>;
+  }
 }
 
 export function MCPMarketplace() {
   const [account, setAccount] = useState<string>("");
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [sagaToken, setSagaToken] = useState<ethers.Contract | null>(null);
   const [mcpPool, setMcpPool] = useState<ethers.Contract | null>(null);
   const [sagaDao, setSagaDao] = useState<ethers.Contract | null>(null);
@@ -177,7 +176,7 @@ export function MCPMarketplace() {
                     },
                   ],
                 });
-              } catch (addError) {
+              } catch (error) {
                 toast({
                   title: "Error",
                   description: "Failed to add Saga network to MetaMask",
@@ -200,7 +199,6 @@ export function MCPMarketplace() {
         const updatedProvider = new ethers.BrowserProvider(ethereum);
         const signer = await updatedProvider.getSigner();
         setAccount(accounts[0]);
-        setProvider(updatedProvider);
 
         // Initialize contract instances
         const sagaTokenContract = new ethers.Contract(SAGA_TOKEN_ADDRESS, SagaTokenABI.abi, signer);
