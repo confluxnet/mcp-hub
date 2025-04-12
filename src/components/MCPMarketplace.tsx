@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import type { MetaMaskInpageProvider } from "@metamask/providers";
+import type { Eip1193Provider } from "ethers";
 import {
   Card,
   CardContent,
@@ -25,10 +27,27 @@ import SagaDAOABI from "../contracts/SagaDAO.json";
 import BillingSystemABI from "../contracts/BillingSystem.json";
 
 // Contract addresses from environment variables
-const SAGA_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_SAGA_TOKEN_ADDRESS || "";
-const MCP_POOL_ADDRESS = process.env.NEXT_PUBLIC_MCP_POOL_ADDRESS || "";
-const SAGA_DAO_ADDRESS = process.env.NEXT_PUBLIC_SAGA_DAO_ADDRESS || "";
-const BILLING_SYSTEM_ADDRESS = process.env.NEXT_PUBLIC_BILLING_SYSTEM_ADDRESS || "";
+const SAGA_TOKEN_ADDRESS =
+  process.env.NEXT_PUBLIC_SAGA_TOKEN_ADDRESS || "0x1234567890123456789012345678901234567890";
+const MCP_POOL_ADDRESS =
+  process.env.NEXT_PUBLIC_MCP_POOL_ADDRESS || "0x1234567890123456789012345678901234567890";
+const SAGA_DAO_ADDRESS =
+  process.env.NEXT_PUBLIC_SAGA_DAO_ADDRESS || "0x1234567890123456789012345678901234567890";
+const BILLING_SYSTEM_ADDRESS =
+  process.env.NEXT_PUBLIC_BILLING_SYSTEM_ADDRESS || "0x1234567890123456789012345678901234567890";
+
+// Add Saga Chainlet network configuration
+const SAGA_CHAINLET_CONFIG = {
+  chainId: "0x" + (2744423445533000).toString(16), // Convert decimal to hex with 0x prefix
+  chainName: "confluxnet_2744423445533000-1",
+  nativeCurrency: {
+    name: "NEX",
+    symbol: "NEX",
+    decimals: 18,
+  },
+  rpcUrls: ["https://confluxnet-2744423445533000-1.jsonrpc.sagarpc.io"],
+  blockExplorerUrls: ["https://confluxnet-2744423445533000-1.sagaexplorer.io"],
+};
 
 // Custom Alert component
 interface AlertProps {
@@ -80,6 +99,15 @@ interface Proposal {
   endBlock: number;
 }
 
+interface MetaMaskProvider extends Eip1193Provider {
+  isMetaMask?: boolean;
+}
+
+// Extend the Window interface using declaration merging
+interface Window {
+  ethereum?: Eip1193Provider;
+}
+
 export function MCPMarketplace() {
   const [account, setAccount] = useState<string>("");
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -105,16 +133,74 @@ export function MCPMarketplace() {
   // Connect wallet and initialize contracts
   const connectWallet = async () => {
     try {
-      if (typeof window.ethereum !== "undefined") {
-        // Use ethers v6 BrowserProvider
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(provider);
+      if (!window.ethereum) {
+        toast({
+          title: "Error",
+          description: "Please install MetaMask to use this feature",
+          variant: "destructive",
+        });
+        return;
+      }
 
-        const accounts = await provider.send("eth_requestAccounts", []);
-        const account = accounts[0];
-        setAccount(account);
+      const ethereum = window.ethereum as unknown as MetaMaskProvider;
 
-        const signer = await provider.getSigner();
+      if (ethereum?.isMetaMask) {
+        const accounts = (await ethereum.request({
+          method: "eth_requestAccounts",
+        })) as string[];
+
+        // Check if we're on the correct network
+        const provider = new ethers.BrowserProvider(ethereum);
+        const network = await provider.getNetwork();
+        const currentChainId = network.chainId.toString(16);
+
+        if (currentChainId !== SAGA_CHAINLET_CONFIG.chainId.replace("0x", "")) {
+          try {
+            // Try to switch to the Saga network
+            await ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: SAGA_CHAINLET_CONFIG.chainId }],
+            });
+          } catch (switchError: any) {
+            // This error code indicates that the chain has not been added to MetaMask
+            if (switchError.code === 4902) {
+              try {
+                await ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: SAGA_CHAINLET_CONFIG.chainId,
+                      chainName: SAGA_CHAINLET_CONFIG.chainName,
+                      nativeCurrency: SAGA_CHAINLET_CONFIG.nativeCurrency,
+                      rpcUrls: SAGA_CHAINLET_CONFIG.rpcUrls,
+                      blockExplorerUrls: SAGA_CHAINLET_CONFIG.blockExplorerUrls,
+                    },
+                  ],
+                });
+              } catch (addError) {
+                toast({
+                  title: "Error",
+                  description: "Failed to add Saga network to MetaMask",
+                  variant: "destructive",
+                });
+                return;
+              }
+            } else {
+              toast({
+                title: "Error",
+                description: "Failed to switch to Saga network",
+                variant: "destructive",
+              });
+              return;
+            }
+          }
+        }
+
+        // Get the updated provider and signer after network switch
+        const updatedProvider = new ethers.BrowserProvider(ethereum);
+        const signer = await updatedProvider.getSigner();
+        setAccount(accounts[0]);
+        setProvider(updatedProvider);
 
         // Initialize contract instances
         const sagaTokenContract = new ethers.Contract(SAGA_TOKEN_ADDRESS, SagaTokenABI.abi, signer);
@@ -132,15 +218,20 @@ export function MCPMarketplace() {
         setBillingSystem(billingSystemContract);
 
         // Get token balance
-        const balance = await sagaTokenContract.balanceOf(account);
-        setBalance(ethers.formatEther(balance));
+        try {
+          const balance = await sagaTokenContract.balanceOf(accounts[0]);
+          setBalance(ethers.formatEther(balance));
+        } catch (balanceError) {
+          console.error("Error getting token balance:", balanceError);
+          setBalance("0");
+        }
 
         // Load MCPs and proposals
         await loadMcps();
         await loadProposals();
       } else {
         toast({
-          title: "MetaMask not found",
+          title: "MetaMask Required",
           description: "Please install MetaMask to use this application",
           variant: "destructive",
         });
@@ -148,8 +239,8 @@ export function MCPMarketplace() {
     } catch (error) {
       console.error("Error connecting wallet:", error);
       toast({
-        title: "Connection Error",
-        description: "Failed to connect wallet. Please try again.",
+        title: "Error",
+        description: "Failed to connect wallet",
         variant: "destructive",
       });
     }
@@ -162,22 +253,34 @@ export function MCPMarketplace() {
     try {
       setLoading(true);
       // This is a placeholder - you'll need to implement the actual contract call
-      const mcpsData = await mcpPool.getMcps();
+      try {
+        const mcpsData = await mcpPool.getMcps();
 
-      const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
-        id: mcp.id.toNumber(),
-        name: mcp.name,
-        description: mcp.description,
-        price: parseFloat(ethers.formatEther(mcp.price)),
-        owner: mcp.owner,
-        approved: mcp.approved,
-        active: mcp.active,
-        apiEndpoints: mcp.apiEndpoints || [],
-        usageCount: mcp.usageCount.toNumber(),
-        revenue: parseFloat(ethers.formatEther(mcp.revenue)),
-      }));
+        const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
+          id: mcp.id.toNumber(),
+          name: mcp.name,
+          description: mcp.description,
+          price: parseFloat(ethers.formatEther(mcp.price)),
+          owner: mcp.owner,
+          approved: mcp.approved,
+          active: mcp.active,
+          apiEndpoints: mcp.apiEndpoints || [],
+          usageCount: mcp.usageCount.toNumber(),
+          revenue: parseFloat(ethers.formatEther(mcp.revenue)),
+        }));
 
-      setMcps(formattedMcps);
+        setMcps(formattedMcps);
+      } catch (mcpError) {
+        console.error("Error loading MCPs from contract:", mcpError);
+        // Set empty array if there's an error
+        setMcps([]);
+        toast({
+          title: "Warning",
+          description:
+            "Could not load MCPs. The contract might not be deployed or the address might be incorrect.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error loading MCPs:", error);
       toast({
@@ -196,20 +299,32 @@ export function MCPMarketplace() {
 
     try {
       // This is a placeholder - you'll need to implement the actual contract call
-      const proposalsData = await sagaDao.getProposals();
+      try {
+        const proposalsData = await sagaDao.getProposals();
 
-      const formattedProposals: Proposal[] = proposalsData.map((proposal: any) => ({
-        id: proposal.id.toNumber(),
-        title: proposal.title,
-        description: proposal.description,
-        proposer: proposal.proposer,
-        forVotes: parseFloat(ethers.formatEther(proposal.forVotes)),
-        againstVotes: parseFloat(ethers.formatEther(proposal.againstVotes)),
-        executed: proposal.executed,
-        endBlock: proposal.endBlock.toNumber(),
-      }));
+        const formattedProposals: Proposal[] = proposalsData.map((proposal: any) => ({
+          id: proposal.id.toNumber(),
+          title: proposal.title,
+          description: proposal.description,
+          proposer: proposal.proposer,
+          forVotes: parseFloat(ethers.formatEther(proposal.forVotes)),
+          againstVotes: parseFloat(ethers.formatEther(proposal.againstVotes)),
+          executed: proposal.executed,
+          endBlock: proposal.endBlock.toNumber(),
+        }));
 
-      setProposals(formattedProposals);
+        setProposals(formattedProposals);
+      } catch (proposalError) {
+        console.error("Error loading proposals from contract:", proposalError);
+        // Set empty array if there's an error
+        setProposals([]);
+        toast({
+          title: "Warning",
+          description:
+            "Could not load proposals. The contract might not be deployed or the address might be incorrect.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error loading proposals:", error);
     }
@@ -427,17 +542,22 @@ export function MCPMarketplace() {
 
   return (
     <div className="space-y-8">
-      {/* Wallet Connection */}
+      {/* Wallet Connection Card */}
       <Card>
         <CardHeader>
           <CardTitle>Connect Wallet</CardTitle>
-          <CardDescription>Connect your wallet to use the MCP Marketplace</CardDescription>
+          <CardDescription>Connect your MetaMask wallet to use the MCP Marketplace</CardDescription>
         </CardHeader>
         <CardContent>
           {!account ? (
-            <Button onClick={connectWallet} disabled={loading}>
-              {loading ? "Connecting..." : "Connect Wallet"}
-            </Button>
+            <div className="space-y-4">
+              <Button onClick={connectWallet} disabled={loading}>
+                {loading ? "Connecting..." : "Connect MetaMask"}
+              </Button>
+              <div className="text-sm text-gray-500">
+                <p>Make sure you have MetaMask installed to use this application.</p>
+              </div>
+            </div>
           ) : (
             <div className="space-y-2">
               <p>Connected Account: {account}</p>
