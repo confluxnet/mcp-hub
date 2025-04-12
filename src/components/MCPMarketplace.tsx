@@ -539,7 +539,7 @@ export function MCPMarketplace() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-[100%]">
       {/* Wallet Connection Card */}
       <Card>
         <CardHeader>
@@ -567,10 +567,16 @@ export function MCPMarketplace() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="use">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="use">Use MCPs</TabsTrigger>
-          <TabsTrigger value="provide">Provide MCPs</TabsTrigger>
-          <TabsTrigger value="dao">DAO Governance</TabsTrigger>
+        <TabsList className="flex w-full justify-center gap-2">
+          <TabsTrigger value="use" className="flex-1 text-center">
+            Use MCPs
+          </TabsTrigger>
+          <TabsTrigger value="provide" className="flex-1 text-center">
+            Provide MCPs
+          </TabsTrigger>
+          <TabsTrigger value="dao" className="flex-1 text-center">
+            DAO Governance
+          </TabsTrigger>
         </TabsList>
 
         {/* Use MCPs Tab */}
