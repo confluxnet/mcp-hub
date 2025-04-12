@@ -28,7 +28,7 @@ import SagaDAOABI from "../contracts/SagaDAO.json";
 import BillingSystemABI from "../contracts/BillingSystem.json";
 
 // Import mock data
-import mockMcpsData from "@/data/mockMcps.json";
+// import mockMcpsData from "@/data/mockMcps.json";
 
 // Contract addresses from environment variables
 const SAGA_TOKEN_ADDRESS =
@@ -80,7 +80,7 @@ interface MetaMaskProvider extends Eip1193Provider {
 }
 
 // Use mockMcpsData.mcps instead
-const mockMcps = mockMcpsData.mcps;
+// const mockMcps = mockMcpsData.mcps;
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -118,48 +118,31 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load MCPs from the contract
+  // Load MCPs from Firestore
   const loadMcps = async () => {
-    if (!mcpPool) return;
-
     try {
       setLoading(true);
-      // This is a placeholder - you'll need to implement the actual contract call
-      try {
-        const mcpsData = await mcpPool.getMCP(0);
 
-        const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
-          id: mcp.id,
-          title: mcp.title,
-          description: mcp.description,
-          tags: mcp.tags || [],
-          icon: mcp.icon,
-          category: mcp.category,
-          usageCount: mcp.usageCount.toNumber(),
-          rating: mcp.rating,
-          price: parseFloat(ethers.formatEther(mcp.price)),
-          owner: mcp.owner,
-          approved: mcp.approved,
-          active: mcp.active,
-          apiEndpoints: mcp.apiEndpoints || [],
-          revenue: parseFloat(ethers.formatEther(mcp.revenue)),
-          codeExamples: mcp.codeExamples,
-        }));
+      // Fetch MCPs from Firestore
+      const response = await fetch("/api/mcps");
+      const result = await response.json();
 
-        setMcps(formattedMcps);
-      } catch (mcpError) {
-        console.error("Error loading MCPs from contract:", mcpError);
-        // Set empty array if there's an error
+      if (result.mcps) {
+        // Filter only approved and active MCPs
+        const approvedMcps = result.mcps.filter((mcp: MCP) => mcp.approved && mcp.active);
+        setMcps(approvedMcps);
+      } else {
+        console.error("No MCPs found in Firestore");
         setMcps([]);
         toast({
           title: "Warning",
-          description:
-            "Could not load MCPs. The contract might not be deployed or the address might be incorrect.",
+          description: "Could not load MCPs from Firestore.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Error loading MCPs:", error);
+      console.error("Error loading MCPs from Firestore:", error);
+      setMcps([]);
       toast({
         title: "Error",
         description: "Failed to load MCPs. Please try again.",
@@ -316,7 +299,7 @@ export default function Home() {
 
           {/* Mock Tools Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockMcps.map((mcp) => (
+            {mcps.map((mcp) => (
               <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
                 <Card className="h-full hover:shadow-lg transition-shadow duration-200">
                   <CardHeader>
