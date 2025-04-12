@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
-import { BarChart2, Package, Users, Wallet, BookOpen, Loader2 } from "lucide-react";
+import { BarChart2, Package, Users, Wallet, BookOpen, Loader2, DollarSign, TrendingUp } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -33,6 +33,11 @@ export function Aside({ isSidebarOpen }: AsideProps) {
       label: "DAO Governance",
       icon: Users,
       href: "/dao-governance",
+    },
+    {
+      label: "Rewards Dashboard",
+      icon: DollarSign,
+      href: "/stats-dashboard",
     },
   ];
 

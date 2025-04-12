@@ -125,6 +125,342 @@
         "python": "# Example Python implementation\nfrom mcp_oracle import OracleClient\n\nclient = OracleClient(api_key='your-api-key')\n\nprice = client.get_price(\n    asset='ETH',\n    currency='USD'\n)",
         "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/oracle/price/ETH/USD \\\n  -H \"Authorization: Bearer your-api-key\""
       }
+    },
+    {
+      "id": "7",
+      "title": "NEAR Cross-Chain Agent",
+      "description": "A powerful agent that enables cross-chain asset movement between NEAR Protocol and other blockchains. This protocol automates the process of bridging assets, investing in DeFi protocols, and monitoring returns.",
+      "tags": ["NEAR", "Cross-Chain", "DeFi"],
+      "icon": "🌐",
+      "category": "Cross-Chain",
+      "usageCount": 8765,
+      "rating": 4.7,
+      "price": 22,
+      "owner": "0xabcdef1234567890abcdef1234567890abcdef12",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/near-bridge"],
+      "revenue": 192830,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { NearBridgeClient } from '@mcp/near-bridge';\n\nconst client = new NearBridgeClient({\n  apiKey: 'your-api-key'\n});\n\nconst result = await client.bridgeAssets({\n  fromChain: 'ethereum',\n  toChain: 'near',\n  token: '0xabcdef1234567890abcdef1234567890abcdef12',\n  amount: '1000000000000000000',\n  dexAction: 'provide-liquidity',\n  targetPool: 'ref-finance.near'\n});",
+        "python": "# Example Python implementation\nfrom mcp_near_bridge import NearBridgeClient\n\nclient = NearBridgeClient(api_key='your-api-key')\n\nresult = client.bridge_assets(\n    from_chain='ethereum',\n    to_chain='near',\n    token='0xabcdef1234567890abcdef1234567890abcdef12',\n    amount='1000000000000000000',\n    dex_action='provide-liquidity',\n    target_pool='ref-finance.near'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/near-bridge/transfer \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"fromChain\": \"ethereum\",\n    \"toChain\": \"near\",\n    \"token\": \"0xabcdef1234567890abcdef1234567890abcdef12\",\n    \"amount\": \"1000000000000000000\",\n    \"dexAction\": \"provide-liquidity\",\n    \"targetPool\": \"ref-finance.near\"\n  }'"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Ethereum DAO Governance Analyzer",
+      "description": "Advanced agent that monitors, analyzes, and summarizes DAO governance proposals on Ethereum-based protocols. This protocol can automatically evaluate proposals, recommend voting decisions, and even execute on-chain votes based on predefined criteria.",
+      "tags": ["Governance", "DAO", "Ethereum", "Analysis"],
+      "icon": "📊",
+      "category": "Governance",
+      "usageCount": 7654,
+      "rating": 4.8,
+      "price": 30,
+      "owner": "0x9876543210fedcba9876543210fedcba98765432",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/dao-analysis"],
+      "revenue": 229620,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { DAOAnalysisClient } from '@mcp/dao-analysis';\n\nconst client = new DAOAnalysisClient({\n  apiKey: 'your-api-key'\n});\n\nconst analysis = await client.analyzeProposal({\n  daoProtocol: 'compound',\n  proposalId: '65',\n  generateSummary: true,\n  compareHistoricalData: true,\n  recommendVote: true\n});",
+        "python": "# Example Python implementation\nfrom mcp_dao_analysis import DAOAnalysisClient\n\nclient = DAOAnalysisClient(api_key='your-api-key')\n\nanalysis = client.analyze_proposal(\n    dao_protocol='compound',\n    proposal_id='65',\n    generate_summary=True,\n    compare_historical_data=True,\n    recommend_vote=True\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/dao-analysis/proposal \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"daoProtocol\": \"compound\",\n    \"proposalId\": \"65\",\n    \"generateSummary\": true,\n    \"compareHistoricalData\": true,\n    \"recommendVote\": true\n  }'"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Story Protocol IP Creator",
+      "description": "Creative agent that generates and tokenizes digital art, stories, and other creative content as NFTs on the Story Protocol. This protocol enables AI-generated content to be registered, licensed, and traded with proper attribution and royalty distribution.",
+      "tags": ["NFT", "IP", "Story Protocol", "Creative"],
+      "icon": "🎨",
+      "category": "Creative",
+      "usageCount": 9876,
+      "rating": 4.6,
+      "price": 18,
+      "owner": "0x1122334455667788991122334455667788991122",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/story-creator"],
+      "revenue": 177768,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { StoryProtocolClient } from '@mcp/story-protocol';\n\nconst client = new StoryProtocolClient({\n  apiKey: 'your-api-key'\n});\n\nconst result = await client.createAndRegisterIP({\n  contentType: 'short-story',\n  prompt: 'A cyberpunk tale set in Neo-Tokyo',\n  licenseType: 'commercial-use',\n  price: '0.05',\n  royaltyPercentage: 2.5\n});",
+        "python": "# Example Python implementation\nfrom mcp_story_protocol import StoryProtocolClient\n\nclient = StoryProtocolClient(api_key='your-api-key')\n\nresult = client.create_and_register_ip(\n    content_type='short-story',\n    prompt='A cyberpunk tale set in Neo-Tokyo',\n    license_type='commercial-use',\n    price='0.05',\n    royalty_percentage=2.5\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/story-creator/create \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"contentType\": \"short-story\",\n    \"prompt\": \"A cyberpunk tale set in Neo-Tokyo\",\n    \"licenseType\": \"commercial-use\",\n    \"price\": \"0.05\",\n    \"royaltyPercentage\": 2.5\n  }'"
+      }
+    },
+    {
+      "id": "10",
+      "title": "Saga DAO Governance",
+      "description": "Comprehensive DAO framework deployed on Saga chainlets, enabling decentralized governance with customizable voting mechanisms, proposal creation, and automated execution of approved actions. This protocol provides sovereignty and isolation for agent-specific governance.",
+      "tags": ["DAO", "Governance", "Saga", "Voting"],
+      "icon": "🏛️",
+      "category": "Governance",
+      "usageCount": 6543,
+      "rating": 4.9,
+      "price": 35,
+      "owner": "0xfedcba9876543210fedcba9876543210fedcba98",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/saga-dao"],
+      "revenue": 229005,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { SagaDAOClient } from '@mcp/saga-dao';\n\nconst client = new SagaDAOClient({\n  apiKey: 'your-api-key'\n});\n\nconst proposal = await client.createProposal({\n  daoAddress: '0xfedcba9876543210fedcba9876543210fedcba98',\n  title: 'Update Treasury Allocation',\n  description: 'Proposal to update treasury allocation to increase development funding',\n  actions: [\n    {\n      contract: '0x1234567890123456789012345678901234567890',\n      method: 'updateTreasuryAllocation',\n      params: [40, 30, 30]\n    }\n  ],\n  votingPeriod: 259200 // 3 days in seconds\n});",
+        "python": "# Example Python implementation\nfrom mcp_saga_dao import SagaDAOClient\n\nclient = SagaDAOClient(api_key='your-api-key')\n\nproposal = client.create_proposal(\n    dao_address='0xfedcba9876543210fedcba9876543210fedcba98',\n    title='Update Treasury Allocation',\n    description='Proposal to update treasury allocation to increase development funding',\n    actions=[\n        {\n            'contract': '0x1234567890123456789012345678901234567890',\n            'method': 'updateTreasuryAllocation',\n            'params': [40, 30, 30]\n        }\n    ],\n    voting_period=259200  # 3 days in seconds\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/saga-dao/proposals \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"daoAddress\": \"0xfedcba9876543210fedcba9876543210fedcba98\",\n    \"title\": \"Update Treasury Allocation\",\n    \"description\": \"Proposal to update treasury allocation to increase development funding\",\n    \"actions\": [\n      {\n        \"contract\": \"0x1234567890123456789012345678901234567890\",\n        \"method\": \"updateTreasuryAllocation\",\n        \"params\": [40, 30, 30]\n      }\n    ],\n    \"votingPeriod\": 259200\n  }'"
+      }
+    },
+    {
+      "id": "11",
+      "title": "EigenLayer AVS Oracle",
+      "description": "A decentralized oracle service built as an EigenLayer AVS (Actively Validated Service) that verifies AI model outputs. This protocol leverages restaked ETH for economic security, enabling consensus on AI-generated results across multiple validators.",
+      "tags": ["EigenLayer", "Oracle", "AVS", "Validation"],
+      "icon": "🔍",
+      "category": "Oracle",
+      "usageCount": 5432,
+      "rating": 4.7,
+      "price": 28,
+      "owner": "0xaabbccddeeff00112233445566778899aabbccdd",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/eigen-avs"],
+      "revenue": 152096,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { EigenAVSClient } from '@mcp/eigen-avs';\n\nconst client = new EigenAVSClient({\n  apiKey: 'your-api-key'\n});\n\nconst verification = await client.verifyAIOutput({\n  modelType: 'large-language-model',\n  prompt: 'Summarize the latest economic report',\n  output: 'The latest economic report indicates stable growth with reduced inflation...',\n  verificationCriteria: ['factual-accuracy', 'hallucination-detection', 'content-safety'],\n  quorumSize: 10\n});",
+        "python": "# Example Python implementation\nfrom mcp_eigen_avs import EigenAVSClient\n\nclient = EigenAVSClient(api_key='your-api-key')\n\nverification = client.verify_ai_output(\n    model_type='large-language-model',\n    prompt='Summarize the latest economic report',\n    output='The latest economic report indicates stable growth with reduced inflation...',\n    verification_criteria=['factual-accuracy', 'hallucination-detection', 'content-safety'],\n    quorum_size=10\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/eigen-avs/verify \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"modelType\": \"large-language-model\",\n    \"prompt\": \"Summarize the latest economic report\",\n    \"output\": \"The latest economic report indicates stable growth with reduced inflation...\",\n    \"verificationCriteria\": [\"factual-accuracy\", \"hallucination-detection\", \"content-safety\"],\n    \"quorumSize\": 10\n  }'"
+      }
+    },
+    {
+      "id": "12",
+      "title": "PIN AI Personal Data Agent",
+      "description": "Privacy-preserving agent that operates on personal data to provide personalized services while keeping sensitive information secure. This protocol enables AI agents to leverage user data for customized recommendations without compromising privacy.",
+      "tags": ["Privacy", "Personal Data", "Recommendations"],
+      "icon": "🔐",
+      "category": "Privacy",
+      "usageCount": 8765,
+      "rating": 4.6,
+      "price": 15,
+      "owner": "0x123456789abcdef0123456789abcdef012345678",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/pin-ai"],
+      "revenue": 131475,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { PINAIClient } from '@mcp/pin-ai';\n\nconst client = new PINAIClient({\n  apiKey: 'your-api-key'\n});\n\nconst recommendation = await client.getPersonalizedRecommendation({\n  userID: 'user-123',\n  queryType: 'travel-planning',\n  parameters: {\n    destination: 'Japan',\n    duration: '10 days',\n    budget: 'medium',\n    travelPreferences: ['culture', 'food', 'nature']\n  },\n  privacyLevel: 'high'\n});",
+        "python": "# Example Python implementation\nfrom mcp_pin_ai import PINAIClient\n\nclient = PINAIClient(api_key='your-api-key')\n\nrecommendation = client.get_personalized_recommendation(\n    user_id='user-123',\n    query_type='travel-planning',\n    parameters={\n        'destination': 'Japan',\n        'duration': '10 days',\n        'budget': 'medium',\n        'travel_preferences': ['culture', 'food', 'nature']\n    },\n    privacy_level='high'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/pin-ai/recommend \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"userID\": \"user-123\",\n    \"queryType\": \"travel-planning\",\n    \"parameters\": {\n      \"destination\": \"Japan\",\n      \"duration\": \"10 days\",\n      \"budget\": \"medium\",\n      \"travelPreferences\": [\"culture\", \"food\", \"nature\"]\n    },\n    \"privacyLevel\": \"high\"\n  }'"
+      }
+    },
+    {
+      "id": "13",
+      "title": "Conversation History Analyzer",
+      "description": "Sophisticated agent that analyzes conversation history and exports it in character-based chat format. This protocol enables rich context understanding and narrative creation from dialogue history.",
+      "tags": ["Conversation", "Analysis", "Character", "Export"],
+      "icon": "💬",
+      "category": "Conversation",
+      "usageCount": 7654,
+      "rating": 4.8,
+      "price": 14,
+      "owner": "0xaaff00bbee11ccdd22eeee33ffff44aaaabbbbcc",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/conversation-analyzer"],
+      "revenue": 107156,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { ConversationClient } from '@mcp/conversation';\n\nconst client = new ConversationClient({\n  apiKey: 'your-api-key'\n});\n\nconst analysis = await client.analyzeConversation({\n  conversationId: 'conv-456',\n  exportFormat: 'character-chat',\n  extractPersonas: true,\n  generateSummary: true,\n  narrativeStyle: 'storytelling'\n});",
+        "python": "# Example Python implementation\nfrom mcp_conversation import ConversationClient\n\nclient = ConversationClient(api_key='your-api-key')\n\nanalysis = client.analyze_conversation(\n    conversation_id='conv-456',\n    export_format='character-chat',\n    extract_personas=True,\n    generate_summary=True,\n    narrative_style='storytelling'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/conversation-analyzer/analyze \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"conversationId\": \"conv-456\",\n    \"exportFormat\": \"character-chat\",\n    \"extractPersonas\": true,\n    \"generateSummary\": true,\n    \"narrativeStyle\": \"storytelling\"\n  }'"
+      }
+    },
+    {
+      "id": "14",
+      "title": "Distributed Swarm Computing",
+      "description": "Decentralized computing protocol that coordinates off-chain swarm computation tasks through on-chain smart contracts. This protocol enables parallel processing of complex AI workloads across distributed nodes.",
+      "tags": ["Distributed Computing", "Swarm", "Parallel Processing"],
+      "icon": "🐝",
+      "category": "Computing",
+      "usageCount": 5432,
+      "rating": 4.5,
+      "price": 32,
+      "owner": "0xffeeddccbbaa99887766554433221100aabbccdd",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/swarm-compute"],
+      "revenue": 173824,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { SwarmComputeClient } from '@mcp/swarm-compute';\n\nconst client = new SwarmComputeClient({\n  apiKey: 'your-api-key'\n});\n\nconst result = await client.distributeTask({\n  taskType: 'image-analysis',\n  inputDataCID: 'QmXgZAUWd8URqr1svjkcpYyPpj4WHwBGx4dfUmJTUPP1w4',\n  batchSize: 10,\n  nodeCount: 8,\n  reward: '0.05',\n  verificationMethod: 'consensus-threshold',\n  consensusThreshold: 75\n});",
+        "python": "# Example Python implementation\nfrom mcp_swarm_compute import SwarmComputeClient\n\nclient = SwarmComputeClient(api_key='your-api-key')\n\nresult = client.distribute_task(\n    task_type='image-analysis',\n    input_data_cid='QmXgZAUWd8URqr1svjkcpYyPpj4WHwBGx4dfUmJTUPP1w4',\n    batch_size=10,\n    node_count=8,\n    reward='0.05',\n    verification_method='consensus-threshold',\n    consensus_threshold=75\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/swarm-compute/distribute \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"taskType\": \"image-analysis\",\n    \"inputDataCID\": \"QmXgZAUWd8URqr1svjkcpYyPpj4WHwBGx4dfUmJTUPP1w4\",\n    \"batchSize\": 10,\n    \"nodeCount\": 8,\n    \"reward\": \"0.05\",\n    \"verificationMethod\": \"consensus-threshold\",\n    \"consensusThreshold\": 75\n  }'"
+      }
+    },
+    {
+      "id": "15",
+      "title": "Transaction Analyzer Agent",
+      "description": "Sophisticated analytics agent that parses and classifies blockchain transactions, providing detailed insights and visualizations. This protocol helps understand complex transaction flows across protocols.",
+      "tags": ["Analytics", "Transaction", "Visualization"],
+      "icon": "📈",
+      "category": "Analytics",
+      "usageCount": 9876,
+      "rating": 4.7,
+      "price": 20,
+      "owner": "0x00112233445566778899aabbccddeeff00112233",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/tx-analyzer"],
+      "revenue": 197520,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { TxAnalyzerClient } from '@mcp/tx-analyzer';\n\nconst client = new TxAnalyzerClient({\n  apiKey: 'your-api-key'\n});\n\nconst analysis = await client.analyzeTx({\n  txHash: '0x123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234',\n  chain: 'ethereum',\n  generateMermaid: true,\n  classifyIntent: true,\n  detectProtocols: true,\n  formatType: 'detailed'\n});",
+        "python": "# Example Python implementation\nfrom mcp_tx_analyzer import TxAnalyzerClient\n\nclient = TxAnalyzerClient(api_key='your-api-key')\n\nanalysis = client.analyze_tx(\n    tx_hash='0x123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234',\n    chain='ethereum',\n    generate_mermaid=True,\n    classify_intent=True,\n    detect_protocols=True,\n    format_type='detailed'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/tx-analyzer/analyze \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"txHash\": \"0x123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234\",\n    \"chain\": \"ethereum\",\n    \"generateMermaid\": true,\n    \"classifyIntent\": true,\n    \"detectProtocols\": true,\n    \"formatType\": \"detailed\"\n  }'"
+      }
+    },
+    {
+      "id": "16",
+      "title": "RootStock DeFi Automation",
+      "description": "Comprehensive DeFi automation protocol built on RootStock that enables complex financial strategies across various protocols. This protocol provides advanced yield optimization and risk management features.",
+      "tags": ["DeFi", "RootStock", "Automation", "Yield"],
+      "icon": "💰",
+      "category": "DeFi",
+      "usageCount": 6543,
+      "rating": 4.6,
+      "price": 18,
+      "owner": "0xddeeff0011223344556677889900aabbccddeeff",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/rsk-defi"],
+      "revenue": 117774,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { RskDefiClient } from '@mcp/rsk-defi';\n\nconst client = new RskDefiClient({\n  apiKey: 'your-api-key'\n});\n\nconst strategy = await client.createYieldStrategy({\n  initialAmount: '1000',\n  token: 'RDOC',\n  riskLevel: 'moderate',\n  durationDays: 30,\n  protocols: ['sovryn', 'money-on-chain'],\n  rebalanceThreshold: 5,\n  targetAPY: 8\n});",
+        "python": "# Example Python implementation\nfrom mcp_rsk_defi import RskDefiClient\n\nclient = RskDefiClient(api_key='your-api-key')\n\nstrategy = client.create_yield_strategy(\n    initial_amount='1000',\n    token='RDOC',\n    risk_level='moderate',\n    duration_days=30,\n    protocols=['sovryn', 'money-on-chain'],\n    rebalance_threshold=5,\n    target_apy=8\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/rsk-defi/yield-strategy \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"initialAmount\": \"1000\",\n    \"token\": \"RDOC\",\n    \"riskLevel\": \"moderate\",\n    \"durationDays\": 30,\n    \"protocols\": [\"sovryn\", \"money-on-chain\"],\n    \"rebalanceThreshold\": 5,\n    \"targetAPY\": 8\n  }'"
+      }
+    },
+    {
+      "id": "17",
+      "title": "AI Model Verification Protocol",
+      "description": "Decentralized protocol for validating and verifying AI model outputs using cryptographic proofs. This protocol ensures AI-generated content is trustworthy and meets predefined quality standards.",
+      "tags": ["AI", "Verification", "Zero-Knowledge", "Validation"],
+      "icon": "✅",
+      "category": "AI Validation",
+      "usageCount": 5432,
+      "rating": 4.8,
+      "price": 25,
+      "owner": "0x9988776655443322110000aabbccddee99887766",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/ai-verification"],
+      "revenue": 135800,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { AIVerificationClient } from '@mcp/ai-verification';\n\nconst client = new AIVerificationClient({\n  apiKey: 'your-api-key'\n});\n\nconst verificationResult = await client.verifyOutput({\n  modelId: 'gpt-4-turbo',\n  prompt: 'Explain quantum computing in simple terms',\n  output: 'Quantum computing uses quantum bits or qubits that can exist in multiple states...',\n  criteria: ['accuracy', 'neutrality', 'completeness'],\n  minConfidenceScore: 0.85,\n  generateProof: true\n});",
+        "python": "# Example Python implementation\nfrom mcp_ai_verification import AIVerificationClient\n\nclient = AIVerificationClient(api_key='your-api-key')\n\nverification_result = client.verify_output(\n    model_id='gpt-4-turbo',\n    prompt='Explain quantum computing in simple terms',\n    output='Quantum computing uses quantum bits or qubits that can exist in multiple states...',\n    criteria=['accuracy', 'neutrality', 'completeness'],\n    min_confidence_score=0.85,\n    generate_proof=True\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/ai-verification/verify \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"modelId\": \"gpt-4-turbo\",\n    \"prompt\": \"Explain quantum computing in simple terms\",\n    \"output\": \"Quantum computing uses quantum bits or qubits that can exist in multiple states...\",\n    \"criteria\": [\"accuracy\", \"neutrality\", \"completeness\"],\n    \"minConfidenceScore\": 0.85,\n    \"generateProof\": true\n  }'"
+      }
+    },
+    {
+      "id": "18",
+      "title": "Autonomous DeFi Trader",
+      "description": "AI-powered trading agent that autonomously executes complex DeFi strategies across multiple protocols and chains. This protocol analyzes market conditions, identifies opportunities, and executes trades to maximize returns.",
+      "tags": ["DeFi", "Trading", "Autonomous", "Multi-chain"],
+      "icon": "🤖",
+      "category": "Trading",
+      "usageCount": 8765,
+      "rating": 4.5,
+      "price": 40,
+      "owner": "0x112233445566778899aabbccddeeff0011223344",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/defi-trader"],
+      "revenue": 350600,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { DeFiTraderClient } from '@mcp/defi-trader';\n\nconst client = new DeFiTraderClient({\n  apiKey: 'your-api-key'\n});\n\nconst tradingBot = await client.createTradingStrategy({\n  initialCapital: '5000',\n  baseCurrency: 'USDC',\n  tradingPairs: ['ETH/USDC', 'WBTC/USDC', 'AAVE/USDC'],\n  riskLevel: 'medium',\n  maxDrawdown: 15,\n  targetChains: ['ethereum', 'polygon', 'arbitrum'],\n  protocols: ['uniswap', 'curve', 'aave'],\n  strategyType: 'momentum',\n  rebalancingFrequency: 'daily'\n});",
+        "python": "# Example Python implementation\nfrom mcp_defi_trader import DeFiTraderClient\n\nclient = DeFiTraderClient(api_key='your-api-key')\n\ntrading_bot = client.create_trading_strategy(\n    initial_capital='5000',\n    base_currency='USDC',\n    trading_pairs=['ETH/USDC', 'WBTC/USDC', 'AAVE/USDC'],\n    risk_level='medium',\n    max_drawdown=15,\n    target_chains=['ethereum', 'polygon', 'arbitrum'],\n    protocols=['uniswap', 'curve', 'aave'],\n    strategy_type='momentum',\n    rebalancing_frequency='daily'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/defi-trader/strategy \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"initialCapital\": \"5000\",\n    \"baseCurrency\": \"USDC\",\n    \"tradingPairs\": [\"ETH/USDC\", \"WBTC/USDC\", \"AAVE/USDC\"],\n    \"riskLevel\": \"medium\",\n    \"maxDrawdown\": 15,\n    \"targetChains\": [\"ethereum\", \"polygon\", \"arbitrum\"],\n    \"protocols\": [\"uniswap\", \"curve\", \"aave\"],\n    \"strategyType\": \"momentum\",\n    \"rebalancingFrequency\": \"daily\"\n  }'"
+      }
+    },
+    {
+      "id": "19",
+      "title": "Knowledge Integration Protocol",
+      "description": "Advanced knowledge management protocol that integrates information from various sources, organizes it, and provides contextual responses to queries. This protocol enables incremental learning and knowledge base maintenance.",
+      "tags": ["Knowledge", "Management", "Integration", "Query"],
+      "icon": "📚",
+      "category": "Knowledge",
+      "usageCount": 7654,
+      "rating": 4.7,
+      "price": 22,
+      "owner": "0xaabbccdd5566778899001122334455aabbccddee",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/knowledge-integration"],
+      "revenue": 168388,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { KnowledgeClient } from '@mcp/knowledge';\n\nconst client = new KnowledgeClient({\n  apiKey: 'your-api-key'\n});\n\nconst response = await client.queryKnowledge({\n  query: 'What are the latest developments in quantum computing?',\n  sources: ['academic-papers', 'news', 'expert-blogs'],\n  timeframe: 'past-year',\n  responseFormat: 'comprehensive',\n  citationRequired: true,\n  confidenceScoreThreshold: 0.8\n});",
+        "python": "# Example Python implementation\nfrom mcp_knowledge import KnowledgeClient\n\nclient = KnowledgeClient(api_key='your-api-key')\n\nresponse = client.query_knowledge(\n    query='What are the latest developments in quantum computing?',\n    sources=['academic-papers', 'news', 'expert-blogs'],\n    timeframe='past-year',\n    response_format='comprehensive',\n    citation_required=True,\n    confidence_score_threshold=0.8\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/knowledge-integration/query \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"query\": \"What are the latest developments in quantum computing?\",\n    \"sources\": [\"academic-papers\", \"news\", \"expert-blogs\"],\n    \"timeframe\": \"past-year\",\n    \"responseFormat\": \"comprehensive\",\n    \"citationRequired\": true,\n    \"confidenceScoreThreshold\": 0.8\n  }'"
+      }
+    },
+    {
+      "id": "20",
+      "title": "Agent Collaboration Framework",
+      "description": "Orchestration protocol that enables multiple specialized AI agents to collaborate on complex tasks. This protocol manages agent communication, task delegation, and result aggregation for seamless multi-agent workflows.",
+      "tags": ["Collaboration", "Multi-agent", "Orchestration", "Workflow"],
+      "icon": "🤝",
+      "category": "Collaboration",
+      "usageCount": 9876,
+      "rating": 4.9,
+      "price": 35,
+      "owner": "0x9988776655443322110000ffeeaabbaabbcceedd",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/agent-collaboration"],
+      "revenue": 345660,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { CollaborationClient } from '@mcp/collaboration';\n\nconst client = new CollaborationClient({\n  apiKey: 'your-api-key'\n});\n\nconst workflow = await client.createWorkflow({\n  taskDescription: 'Analyze the market impact of recent Fed policy changes',\n  agents: [\n    { id: 'agent-123', role: 'data-gatherer', specialization: 'financial-news' },\n    { id: 'agent-456', role: 'analyst', specialization: 'economic-trends' },\n    { id: 'agent-789', role: 'predictor', specialization: 'market-forecasting' },\n    { id: 'agent-012', role: 'reporter', specialization: 'content-creation' }\n  ],\n  workflowPattern: 'sequential',\n  outputFormat: 'comprehensive-report',\n  maxExecutionTime: 300\n});",
+        "python": "# Example Python implementation\nfrom mcp_collaboration import CollaborationClient\n\nclient = CollaborationClient(api_key='your-api-key')\n\nworkflow = client.create_workflow(\n    task_description='Analyze the market impact of recent Fed policy changes',\n    agents=[\n        {'id': 'agent-123', 'role': 'data-gatherer', 'specialization': 'financial-news'},\n        {'id': 'agent-456', 'role': 'analyst', 'specialization': 'economic-trends'},\n        {'id': 'agent-789', 'role': 'predictor', 'specialization': 'market-forecasting'},\n        {'id': 'agent-012', 'role': 'reporter', 'specialization': 'content-creation'}\n    ],\n    workflow_pattern='sequential',\n    output_format='comprehensive-report',\n    max_execution_time=300\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/agent-collaboration/workflow \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"taskDescription\": \"Analyze the market impact of recent Fed policy changes\",\n    \"agents\": [\n      {\"id\": \"agent-123\", \"role\": \"data-gatherer\", \"specialization\": \"financial-news\"},\n      {\"id\": \"agent-456\", \"role\": \"analyst\", \"specialization\": \"economic-trends\"},\n      {\"id\": \"agent-789\", \"role\": \"predictor\", \"specialization\": \"market-forecasting\"},\n      {\"id\": \"agent-012\", \"role\": \"reporter\", \"specialization\": \"content-creation\"}\n    ],\n    \"workflowPattern\": \"sequential\",\n    \"outputFormat\": \"comprehensive-report\",\n    \"maxExecutionTime\": 300\n  }'"
+      }
+    },
+    {
+      "id": "21",
+      "title": "Ethereum Transaction Parser",
+      "description": "Advanced transaction analysis agent that parses Ethereum transactions and visualizes contract interactions. This protocol decodes transaction calldata, traces contract calls, and generates human-readable explanations with interactive visualizations.",
+      "tags": ["Ethereum", "Transaction", "Analysis", "Mermaid"],
+      "icon": "🔍",
+      "category": "Blockchain Analysis",
+      "usageCount": 8543,
+      "rating": 4.9,
+      "price": 25,
+      "owner": "0xf1uyuh74gnj0c7abcd1234567890abcdef1234",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/ethereum-parser"],
+      "revenue": 213575,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { EthereumParserClient } from '@mcp/ethereum-parser';\n\nconst client = new EthereumParserClient({\n  apiKey: 'your-api-key'\n});\n\nconst analysis = await client.analyzeTransaction({\n  transactionHash: '0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6',\n  includeRawTrace: true,\n  generateMermaid: true,\n  naturalLanguageExplanation: true,\n  detailedInterpretation: true\n});",
+        "python": "# Example Python implementation\nfrom mcp_ethereum_parser import EthereumParserClient\n\nclient = EthereumParserClient(api_key='your-api-key')\n\nanalysis = client.analyze_transaction(\n    transaction_hash='0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6',\n    include_raw_trace=True,\n    generate_mermaid=True,\n    natural_language_explanation=True,\n    detailed_interpretation=True\n)",
+        "shell": "# Example Shell implementation\ncurl -X GET 'https://api.mcp.dog/v1/ethereum-parser/analyze/transaction/0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6?include_raw_trace=true' \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
+    },
+    {
+      "id": "22",
+      "title": "NEAR Price Alert Agent",
+      "description": "Real-time price monitoring agent for NEAR Protocol that tracks price movements and sends alerts when target thresholds are met. This agent accepts custom price targets, monitors cryptocurrency market data, and delivers instant notifications.",
+      "tags": ["NEAR", "Price Alert", "Cryptocurrency", "Monitoring"],
+      "icon": "📈",
+      "category": "Financial",
+      "usageCount": 7862,
+      "rating": 4.8,
+      "price": 18,
+      "owner": "0xf1uyuh74gnj0c7acdf1234567890nearprotocol12",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/near-price-alert"],
+      "revenue": 141516,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { NearPriceAlertClient } from '@mcp/near-price-alert';\n\nconst client = new NearPriceAlertClient({\n  apiKey: 'your-api-key'\n});\n\n// Set a price alert\nconst alertResponse = await client.setPriceAlert({\n  target: 3.0,\n  direction: 'above', // 'above' or 'below'\n  notificationMethod: 'webhook',\n  webhookUrl: 'https://your-server.com/webhook'\n});\n\n// Check current status\nconst statusResponse = await client.checkStatus();\n\n// Cancel an alert\nconst cancelResponse = await client.cancelAlert(alertResponse.alertId);",
+        "python": "# Example Python implementation\nfrom near_price_alert import NearPriceAlertClient\n\nclient = NearPriceAlertClient(api_key='your-api-key')\n\n# Set a price alert\nalert_response = client.set_price_alert(\n    target=3.0,\n    direction='above',  # 'above' or 'below'\n    notification_method='webhook',\n    webhook_url='https://your-server.com/webhook'\n)\n\n# Check current status\nstatus_response = client.check_status()\n\n# Cancel an alert\ncancel_response = client.cancel_alert(alert_response['alert_id'])",
+        "shell": "# Example Shell implementation\n# Set a price alert\ncurl -X POST 'https://api.mcp.dog/v1/near-price-alert/set' \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"target\": 3.0,\n    \"direction\": \"above\",\n    \"notification_method\": \"webhook\",\n    \"webhook_url\": \"https://your-server.com/webhook\"\n  }'\n\n# Check current status\ncurl -X GET 'https://api.mcp.dog/v1/near-price-alert/status' \\\n  -H \"Authorization: Bearer your-api-key\"\n\n# Cancel an alert\ncurl -X DELETE 'https://api.mcp.dog/v1/near-price-alert/cancel/ALERT_ID' \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
     }
   ]
 }

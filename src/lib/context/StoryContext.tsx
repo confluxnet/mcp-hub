@@ -35,6 +35,8 @@ interface StoryContextType {
   derivativeIpId: Address | null;
   setDerivativeIpId: (ipId: Address | null) => void;
   isInitialized: boolean;
+  sagaBalance: string;
+  setSagaBalance: (balance: string) => void;
 }
 
 const StoryContext = createContext<StoryContextType | undefined>(undefined);
@@ -52,6 +54,7 @@ export function StoryProvider({ children }: { children: ReactNode }) {
   const [licenseTermsId, setLicenseTermsId] = useState<string | null>(null);
   const [derivativeIpId, setDerivativeIpId] = useState<Address | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [sagaBalance, setSagaBalance] = useState("0.0");
 
   // Initialize Story client when wallet is connected
   useEffect(() => {
@@ -101,6 +104,8 @@ export function StoryProvider({ children }: { children: ReactNode }) {
         derivativeIpId,
         setDerivativeIpId,
         isInitialized,
+        sagaBalance,
+        setSagaBalance
       }}
     >
       {children}
