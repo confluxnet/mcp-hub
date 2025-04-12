@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ethersproject/providers": "^5.8.0",
     "@google/generative-ai": "^0.24.0",
+    "@huggingface/inference": "^3.7.1",
     "@metamask/providers": "^21.0.0",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-context-menu": "^2.2.6",
@@ -47,6 +49,7 @@
     "react-icons": "^5.5.0",
     "react-syntax-highlighter": "^15.6.1",
     "reactflow": "^11.11.4",
+    "recharts": "^2.15.2",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7"
   },
