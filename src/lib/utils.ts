@@ -12,5 +12,4 @@ export function generateId(): string {
 }
 
 // Story Protocol contract addresses
-export const SPG_NFT_CONTRACT_ADDRESS: Address = "0xc32A8a0FF3beDDDa58393d022aF433e78739FAbc";
-export const ROYALTY_POLICY_LAP_ADDRESS: Address = "0xBe54FB168b3c982b7AaE60dB6CF75Bd8447b390E";
+export const SPG_NFT_CONTRACT_ADDRESS: Address = "0x6e866c90E0D3d8F62C7cFD7C77Ab077E906E7156";
