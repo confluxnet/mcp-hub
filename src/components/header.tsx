@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
-import { useState } from "react";
-import { ethers } from "ethers";
 import { PanelRight } from "lucide-react";
 
 interface HeaderProps {

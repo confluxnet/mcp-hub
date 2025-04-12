@@ -586,6 +586,22 @@ export function MCPMarketplace() {
     }
   };
 
+  // Add disconnect wallet function
+  const disconnectWallet = () => {
+    setAccount("");
+    setBalance("0");
+    setSagaToken(null);
+    setMcpPool(null);
+    setSagaDao(null);
+    setBillingSystem(null);
+    setMcps([]);
+    setProposals([]);
+    toast({
+      title: "Wallet Disconnected",
+      description: "Your wallet has been disconnected",
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -651,16 +667,29 @@ export function MCPMarketplace() {
           </nav>
         </div>
 
-        {/* Connect Wallet Button at Bottom */}
-        <div className="mt-auto p-4 border-t">
-          <Button
-            className="w-full flex items-center justify-center"
-            onClick={connectWallet}
-            variant={account ? "outline" : "default"}
-          >
-            <Wallet className="w-4 h-4 mr-2" />
-            {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Connect Wallet"}
-          </Button>
+        {/* Wallet Section at Bottom */}
+        <div className="mt-auto p-4 border-t space-y-2">
+          {account ? (
+            <>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Balance:</span>
+                <span>{parseFloat(balance).toFixed(2)} SAGA</span>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center"
+                onClick={disconnectWallet}
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                {`${account.slice(0, 6)}...${account.slice(-4)}`}
+              </Button>
+            </>
+          ) : (
+            <Button className="w-full flex items-center justify-center" onClick={connectWallet}>
+              <Wallet className="w-4 h-4 mr-2" />
+              Connect Wallet
+            </Button>
+          )}
         </div>
       </aside>
 
