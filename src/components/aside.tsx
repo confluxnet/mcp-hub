@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { BarChart2, Package, Users, Wallet } from "lucide-react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { useWallet } from "@/hooks/useWallet";
+import { BarChart2, Package, Users, Wallet, BookOpen, Loader2 } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 interface AsideProps {
   isSidebarOpen: boolean;
@@ -18,6 +18,11 @@ export function Aside({ isSidebarOpen }: AsideProps) {
       label: "Usage Statistics",
       icon: BarChart2,
       href: "/",
+    },
+    {
+      label: "Story Protocol",
+      icon: BookOpen,
+      href: "/story-protocol",
     },
     {
       label: "Provide MCPs",
@@ -55,7 +60,8 @@ export function Aside({ isSidebarOpen }: AsideProps) {
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isSelected = pathname === item.href;
+            const isSelected =
+              pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/");
 
             return (
               <Button
@@ -88,7 +94,10 @@ export function Aside({ isSidebarOpen }: AsideProps) {
               onClick={disconnectWallet}
             >
               <Wallet className="w-4 h-4 mr-2" />
-              {`${account.slice(0, 6)}...${account.slice(-4)}`}
+              <span className="flex flex-col">
+                <span>{`${account.slice(0, 6)}...${account.slice(-4)}`}</span>
+                {/* <span className="text-xs text-muted-foreground">{walletName}</span> */}
+              </span>
             </Button>
           </>
         ) : (
