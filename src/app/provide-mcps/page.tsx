@@ -33,38 +33,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
 import { submitMcp, getMcps, MCP as ImportedMCPType } from "@/lib/api";
 
-// Import contract ABIs
-import SagaTokenABI from "../../contracts/SagaToken.json";
-import MCPPoolABI from "../../contracts/MCPPool.json";
-import SagaDAOABI from "../../contracts/SagaDAO.json";
-import BillingSystemABI from "../../contracts/BillingSystem.json";
-
-// Import mock data
-import mockMcpsData from "@/data/mockMcps.json";
-
-// Contract addresses from environment variables
-const SAGA_TOKEN_ADDRESS =
-  process.env.NEXT_PUBLIC_SAGA_TOKEN_ADDRESS || "0x1234567890123456789012345678901234567890";
-const MCP_POOL_ADDRESS =
-  process.env.NEXT_PUBLIC_MCP_POOL_ADDRESS || "0x1234567890123456789012345678901234567890";
-const SAGA_DAO_ADDRESS =
-  process.env.NEXT_PUBLIC_SAGA_DAO_ADDRESS || "0x1234567890123456789012345678901234567890";
-const BILLING_SYSTEM_ADDRESS =
-  process.env.NEXT_PUBLIC_BILLING_SYSTEM_ADDRESS || "0x1234567890123456789012345678901234567890";
-
-// Add Saga Chainlet network configuration
-const SAGA_CHAINLET_CONFIG = {
-  chainId: "0x" + (2744423445533000).toString(16), // Convert decimal to hex with 0x prefix
-  chainName: "confluxnet_2744423445533000-1",
-  nativeCurrency: {
-    name: "NEX",
-    symbol: "NEX",
-    decimals: 18,
-  },
-  rpcUrls: ["https://confluxnet-2744423445533000-1.jsonrpc.sagarpc.io"],
-  blockExplorerUrls: ["https://confluxnet-2744423445533000-1.sagaexplorer.io"],
-};
-
 // Define the MCP interface
 interface MCP {
   id: string;
@@ -249,34 +217,34 @@ export default function ProvideMcps() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
   // Submit new MCP
   const handleSubmitMcp = async () => {
-    if (!mcpPool) return;
-
     try {
       setLoading(true);
 
+      if (!mcpPool) {
+        toast({
+          title: "Error",
+          description: "Please connect your wallet first",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       // Validate input
       if (
-        !selectedMcp ||
         !selectedMcp.title ||
         !selectedMcp.description ||
         !selectedMcp.price ||
-        !selectedMcp.apiEndpoints
+        !selectedMcp.apiEndpoints.length
       ) {
         toast({
           title: "Error",
           description: "Please fill in all required fields",
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
 
@@ -291,9 +259,15 @@ export default function ProvideMcps() {
         JSON.stringify(selectedMcp.codeExamples || {}), // Convert code examples to string
         priceInWei
       );
+
+      toast({
+        title: "Transaction Submitted",
+        description: "Waiting for transaction confirmation...",
+      });
+
       await tx.wait();
 
-      // Firestore에 MCP 데이터 저장
+      // Save to Firestore
       const mcpData: MCPType = {
         title: selectedMcp.title,
         description: selectedMcp.description,
@@ -332,26 +306,19 @@ export default function ProvideMcps() {
         active: false,
         revenue: 0,
       });
-      setApiParams({
-        method: "GET",
-        path: "",
-        pathParams: [],
-        queryParams: [],
-        bodyParams: [],
-      });
-
-      // Reload MCPs
-      await loadMcps();
 
       toast({
         title: "Success",
-        description: "MCP submitted successfully. Waiting for DAO approval.",
+        description: "MCP submitted successfully!",
       });
+
+      // Redirect to main page
+      window.location.href = "/";
     } catch (error) {
       console.error("Error submitting MCP:", error);
       toast({
         title: "Error",
-        description: "Failed to submit MCP. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit MCP",
         variant: "destructive",
       });
     } finally {
@@ -482,24 +449,6 @@ export default function ProvideMcps() {
     }
   };
 
-  // Generate path from path parameters
-  const generatePath = () => {
-    let path = apiParams.path;
-    apiParams.pathParams.forEach((param) => {
-      path = path.replace(`{${param.key}}`, `:${param.key}`);
-    });
-    return path;
-  };
-
-  // Update path when path parameters change
-  useEffect(() => {
-    const path = generatePath();
-    setApiParams((prev) => ({
-      ...prev,
-      path,
-    }));
-  }, [apiParams.pathParams]);
-
   // Handle file import
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -565,6 +514,46 @@ export default function ProvideMcps() {
     };
 
     reader.readAsText(file);
+  };
+
+  // Add all parameters from imported OpenAPI
+  const addAllParameters = () => {
+    if (!selectedMcp.allParameters) return;
+
+    // Add all path parameters
+    selectedMcp.allParameters.pathParams.forEach((param) => {
+      if (!apiParams.pathParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          pathParams: [...prev.pathParams, param],
+        }));
+      }
+    });
+
+    // Add all query parameters
+    selectedMcp.allParameters.queryParams.forEach((param) => {
+      if (!apiParams.queryParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          queryParams: [...prev.queryParams, param],
+        }));
+      }
+    });
+
+    // Add all body parameters
+    selectedMcp.allParameters.bodyParams.forEach((param) => {
+      if (!apiParams.bodyParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          bodyParams: [...prev.bodyParams, param],
+        }));
+      }
+    });
+
+    toast({
+      title: "Parameters Added",
+      description: "All parameters from the OpenAPI JSON have been added to the form.",
+    });
   };
 
   // Process OpenAPI JSON
@@ -740,22 +729,6 @@ export default function ProvideMcps() {
     }
   };
 
-  // Handle OpenAPI JSON import
-  const handleOpenApiImport = () => {
-    try {
-      const parsedJson = JSON.parse(openApiJson);
-      processOpenApiJson(parsedJson);
-    } catch (error) {
-      console.error("Error parsing OpenAPI JSON:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to parse OpenAPI specification",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Generate TypeScript code example
   const generateTypeScriptExample = (path: string, method: string, pathInfo: any) => {
     const endpoint = path;
@@ -914,46 +887,7 @@ export default function ProvideMcps() {
     return example;
   };
 
-  // Add all parameters from imported OpenAPI
-  const addAllParameters = () => {
-    if (!selectedMcp.allParameters) return;
-
-    // Add all path parameters
-    selectedMcp.allParameters.pathParams.forEach((param) => {
-      if (!apiParams.pathParams.some((p) => p.key === param.key)) {
-        setApiParams((prev) => ({
-          ...prev,
-          pathParams: [...prev.pathParams, param],
-        }));
-      }
-    });
-
-    // Add all query parameters
-    selectedMcp.allParameters.queryParams.forEach((param) => {
-      if (!apiParams.queryParams.some((p) => p.key === param.key)) {
-        setApiParams((prev) => ({
-          ...prev,
-          queryParams: [...prev.queryParams, param],
-        }));
-      }
-    });
-
-    // Add all body parameters
-    selectedMcp.allParameters.bodyParams.forEach((param) => {
-      if (!apiParams.bodyParams.some((p) => p.key === param.key)) {
-        setApiParams((prev) => ({
-          ...prev,
-          bodyParams: [...prev.bodyParams, param],
-        }));
-      }
-    });
-
-    toast({
-      title: "Parameters Added",
-      description: "All parameters from the OpenAPI JSON have been added to the form.",
-    });
-  };
-
+  // Move loading check to the render part
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
@@ -970,471 +904,477 @@ export default function ProvideMcps() {
           isSidebarOpen ? "md:ml-64" : ""
         }`}
       >
-        <div className="max-w-7xl mx-auto">
-          <Tabs defaultValue="submit" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="submit">Submit MCP</TabsTrigger>
-              <TabsTrigger value="dashboard">Provider Dashboard</TabsTrigger>
-            </TabsList>
+        {loading ? (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto">
+            <Tabs defaultValue="submit" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="submit">Submit MCP</TabsTrigger>
+                <TabsTrigger value="dashboard">Provider Dashboard</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="submit" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Submit MCP for DAO Approval</CardTitle>
-                      <CardDescription>
-                        Fill in the details of your MCP to submit it for DAO approval.
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="file"
-                        id="openapi-file"
-                        accept=".json"
-                        className="hidden"
-                        onChange={handleFileImport}
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() => document.getElementById("openapi-file")?.click()}
-                      >
-                        Import OpenAPI File
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="title" className="text-sm font-medium">
-                      Title
-                    </label>
-                    <Input
-                      id="title"
-                      placeholder="Enter MCP title"
-                      value={selectedMcp.title}
-                      onChange={handleTitleChange}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="description" className="text-sm font-medium">
-                      Description
-                    </label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter MCP description"
-                      value={selectedMcp.description}
-                      onChange={handleDescriptionChange}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="price" className="text-sm font-medium">
-                      Price (SAGA tokens)
-                    </label>
-                    <Input
-                      id="price"
-                      type="number"
-                      placeholder="Enter MCP price"
-                      value={selectedMcp.price}
-                      onChange={handlePriceChange}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="apiEndpoints" className="text-sm font-medium">
-                      API Endpoint
-                    </label>
-                    <Input
-                      id="apiEndpoints"
-                      placeholder="Enter API endpoint"
-                      value={selectedMcp.apiEndpoints.join(", ")}
-                      onChange={handleApiEndpointsChange}
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">API Parameters</label>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => addParameter("path")}>
-                          Add Path Param
+              <TabsContent value="submit" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>Submit MCP for DAO Approval</CardTitle>
+                        <CardDescription>
+                          Fill in the details of your MCP to submit it for DAO approval.
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          id="openapi-file"
+                          accept=".json"
+                          className="hidden"
+                          onChange={handleFileImport}
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => document.getElementById("openapi-file")?.click()}
+                        >
+                          Import OpenAPI File
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => addParameter("query")}>
-                          Add Query Param
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => addParameter("body")}>
-                          Add Body Param
-                        </Button>
-                        {selectedMcp.allParameters && (
-                          <Button variant="outline" size="sm" onClick={addAllParameters}>
-                            Add All Params
-                          </Button>
-                        )}
                       </div>
                     </div>
-
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">HTTP Method</label>
-                      <Select
-                        value={apiParams.method}
-                        onValueChange={(value) =>
-                          setApiParams((prev) => ({ ...prev, method: value }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select HTTP method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GET">GET</SelectItem>
-                          <SelectItem value="POST">POST</SelectItem>
-                          <SelectItem value="PUT">PUT</SelectItem>
-                          <SelectItem value="DELETE">DELETE</SelectItem>
-                          <SelectItem value="PATCH">PATCH</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Base Path</label>
+                      <label htmlFor="title" className="text-sm font-medium">
+                        Title
+                      </label>
                       <Input
-                        placeholder="/api/v1/resource"
-                        value={apiParams.path}
-                        onChange={(e) =>
-                          setApiParams((prev) => ({ ...prev, path: e.target.value }))
-                        }
+                        id="title"
+                        placeholder="Enter MCP title"
+                        value={selectedMcp.title}
+                        onChange={handleTitleChange}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Use {"{paramName}"} to define path parameters, e.g., /api/v1/users/
-                        {"{userId}"}
-                      </p>
                     </div>
 
-                    {apiParams.pathParams.length > 0 && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Path Parameters</label>
-                        <div className="space-y-2">
-                          {apiParams.pathParams.map((param, index) => (
-                            <div key={`path-${index}`} className="flex items-center space-x-2">
-                              <Input
-                                placeholder="Parameter name"
-                                value={param.key}
-                                onChange={(e) =>
-                                  updateParameter("path", index, "key", e.target.value)
-                                }
-                                className="flex-1"
-                              />
-                              <Select
-                                value={param.type}
-                                onValueChange={(value) =>
-                                  updateParameter("path", index, "type", value)
-                                }
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="string">String</SelectItem>
-                                  <SelectItem value="number">Number</SelectItem>
-                                  <SelectItem value="integer">Integer</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeParameter("path", index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
+                    <div className="space-y-2">
+                      <label htmlFor="description" className="text-sm font-medium">
+                        Description
+                      </label>
+                      <Textarea
+                        id="description"
+                        placeholder="Enter MCP description"
+                        value={selectedMcp.description}
+                        onChange={handleDescriptionChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="price" className="text-sm font-medium">
+                        Price (SAGA tokens)
+                      </label>
+                      <Input
+                        id="price"
+                        type="number"
+                        placeholder="Enter MCP price"
+                        value={selectedMcp.price}
+                        onChange={handlePriceChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="apiEndpoints" className="text-sm font-medium">
+                        API Endpoint
+                      </label>
+                      <Input
+                        id="apiEndpoints"
+                        placeholder="Enter API endpoint"
+                        value={selectedMcp.apiEndpoints.join(", ")}
+                        onChange={handleApiEndpointsChange}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">API Parameters</label>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => addParameter("path")}>
+                            Add Path Param
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => addParameter("query")}>
+                            Add Query Param
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => addParameter("body")}>
+                            Add Body Param
+                          </Button>
+                          {selectedMcp.allParameters && (
+                            <Button variant="outline" size="sm" onClick={addAllParameters}>
+                              Add All Params
+                            </Button>
+                          )}
                         </div>
                       </div>
-                    )}
 
-                    {apiParams.queryParams.length > 0 && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Query Parameters</label>
+                        <label className="text-sm font-medium">HTTP Method</label>
+                        <Select
+                          value={apiParams.method}
+                          onValueChange={(value) =>
+                            setApiParams((prev) => ({ ...prev, method: value }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select HTTP method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="GET">GET</SelectItem>
+                            <SelectItem value="POST">POST</SelectItem>
+                            <SelectItem value="PUT">PUT</SelectItem>
+                            <SelectItem value="DELETE">DELETE</SelectItem>
+                            <SelectItem value="PATCH">PATCH</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Base Path</label>
+                        <Input
+                          placeholder="/api/v1/resource"
+                          value={apiParams.path}
+                          onChange={(e) =>
+                            setApiParams((prev) => ({ ...prev, path: e.target.value }))
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Use {"{paramName}"} to define path parameters, e.g., /api/v1/users/
+                          {"{userId}"}
+                        </p>
+                      </div>
+
+                      {apiParams.pathParams.length > 0 && (
                         <div className="space-y-2">
-                          {apiParams.queryParams.map((param, index) => (
-                            <div key={`query-${index}`} className="flex items-center space-x-2">
-                              <Input
-                                placeholder="Parameter name"
-                                value={param.key}
-                                onChange={(e) =>
-                                  updateParameter("query", index, "key", e.target.value)
-                                }
-                                className="flex-1"
-                              />
-                              <Select
-                                value={param.type}
-                                onValueChange={(value) =>
-                                  updateParameter("query", index, "type", value)
-                                }
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="string">String</SelectItem>
-                                  <SelectItem value="number">Number</SelectItem>
-                                  <SelectItem value="boolean">Boolean</SelectItem>
-                                  <SelectItem value="integer">Integer</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <div className="flex items-center space-x-1">
-                                <Checkbox
-                                  checked={param.required}
-                                  onChange={(checked) =>
-                                    updateParameter("query", index, "required", checked)
+                          <label className="text-sm font-medium">Path Parameters</label>
+                          <div className="space-y-2">
+                            {apiParams.pathParams.map((param, index) => (
+                              <div key={`path-${index}`} className="flex items-center space-x-2">
+                                <Input
+                                  placeholder="Parameter name"
+                                  value={param.key}
+                                  onChange={(e) =>
+                                    updateParameter("path", index, "key", e.target.value)
                                   }
+                                  className="flex-1"
                                 />
-                                <label htmlFor={`query-required-${index}`} className="text-xs">
-                                  Required
-                                </label>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeParameter("query", index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {apiParams.bodyParams.length > 0 && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Body Parameters</label>
-                        <div className="space-y-2">
-                          {apiParams.bodyParams.map((param, index) => (
-                            <div key={`body-${index}`} className="flex items-center space-x-2">
-                              <Input
-                                placeholder="Parameter name"
-                                value={param.key}
-                                onChange={(e) =>
-                                  updateParameter("body", index, "key", e.target.value)
-                                }
-                                className="flex-1"
-                              />
-                              <Select
-                                value={param.type}
-                                onValueChange={(value) =>
-                                  updateParameter("body", index, "type", value)
-                                }
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="string">String</SelectItem>
-                                  <SelectItem value="number">Number</SelectItem>
-                                  <SelectItem value="boolean">Boolean</SelectItem>
-                                  <SelectItem value="integer">Integer</SelectItem>
-                                  <SelectItem value="object">Object</SelectItem>
-                                  <SelectItem value="array">Array</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <div className="flex items-center space-x-1">
-                                <Checkbox
-                                  checked={param.required}
-                                  onChange={(checked) =>
-                                    updateParameter("body", index, "required", checked)
+                                <Select
+                                  value={param.type}
+                                  onValueChange={(value) =>
+                                    updateParameter("path", index, "type", value)
                                   }
-                                />
-                                <label htmlFor={`body-required-${index}`} className="text-xs">
-                                  Required
-                                </label>
+                                >
+                                  <SelectTrigger className="w-24">
+                                    <SelectValue placeholder="Type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="integer">Integer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeParameter("path", index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {apiParams.queryParams.length > 0 && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Query Parameters</label>
+                          <div className="space-y-2">
+                            {apiParams.queryParams.map((param, index) => (
+                              <div key={`query-${index}`} className="flex items-center space-x-2">
+                                <Input
+                                  placeholder="Parameter name"
+                                  value={param.key}
+                                  onChange={(e) =>
+                                    updateParameter("query", index, "key", e.target.value)
+                                  }
+                                  className="flex-1"
+                                />
+                                <Select
+                                  value={param.type}
+                                  onValueChange={(value) =>
+                                    updateParameter("query", index, "type", value)
+                                  }
+                                >
+                                  <SelectTrigger className="w-24">
+                                    <SelectValue placeholder="Type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="integer">Integer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <div className="flex items-center space-x-1">
+                                  <Checkbox
+                                    checked={param.required}
+                                    onChange={(checked) =>
+                                      updateParameter("query", index, "required", checked)
+                                    }
+                                  />
+                                  <label htmlFor={`query-required-${index}`} className="text-xs">
+                                    Required
+                                  </label>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeParameter("query", index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {apiParams.bodyParams.length > 0 && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Body Parameters</label>
+                          <div className="space-y-2">
+                            {apiParams.bodyParams.map((param, index) => (
+                              <div key={`body-${index}`} className="flex items-center space-x-2">
+                                <Input
+                                  placeholder="Parameter name"
+                                  value={param.key}
+                                  onChange={(e) =>
+                                    updateParameter("body", index, "key", e.target.value)
+                                  }
+                                  className="flex-1"
+                                />
+                                <Select
+                                  value={param.type}
+                                  onValueChange={(value) =>
+                                    updateParameter("body", index, "type", value)
+                                  }
+                                >
+                                  <SelectTrigger className="w-24">
+                                    <SelectValue placeholder="Type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="integer">Integer</SelectItem>
+                                    <SelectItem value="object">Object</SelectItem>
+                                    <SelectItem value="array">Array</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <div className="flex items-center space-x-1">
+                                  <Checkbox
+                                    checked={param.required}
+                                    onChange={(checked) =>
+                                      updateParameter("body", index, "required", checked)
+                                    }
+                                  />
+                                  <label htmlFor={`body-required-${index}`} className="text-xs">
+                                    Required
+                                  </label>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeParameter("body", index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleSubmitMcp} disabled={loading} className="w-full">
+                      {loading ? "Submitting..." : "Submit MCP"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                {/* Code Examples Card */}
+                {selectedMcp.codeExamples &&
+                  (selectedMcp.codeExamples.typescript ||
+                    selectedMcp.codeExamples.python ||
+                    selectedMcp.codeExamples.shell) && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Generated Code Examples</CardTitle>
+                        <CardDescription>
+                          Code examples generated from your OpenAPI specification.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {selectedMcp.codeExamples.typescript && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium">TypeScript</label>
                               <Button
                                 variant="ghost"
-                                size="icon"
-                                onClick={() => removeParameter("body", index)}
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    selectedMcp.codeExamples?.typescript || ""
+                                  );
+                                  toast({
+                                    title: "Copied",
+                                    description: "TypeScript code copied to clipboard",
+                                  });
+                                }}
                               >
-                                <X className="h-4 w-4" />
+                                Copy
                               </Button>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button onClick={handleSubmitMcp} disabled={loading} className="w-full">
-                    {loading ? "Submitting..." : "Submit MCP"}
-                  </Button>
-                </CardFooter>
-              </Card>
+                            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                              <pre className="text-xs font-mono whitespace-pre-wrap">
+                                {selectedMcp.codeExamples.typescript}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
 
-              {/* Code Examples Card */}
-              {selectedMcp.codeExamples &&
-                (selectedMcp.codeExamples.typescript ||
-                  selectedMcp.codeExamples.python ||
-                  selectedMcp.codeExamples.shell) && (
+                        {selectedMcp.codeExamples.python && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium">Python</label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    selectedMcp.codeExamples?.python || ""
+                                  );
+                                  toast({
+                                    title: "Copied",
+                                    description: "Python code copied to clipboard",
+                                  });
+                                }}
+                              >
+                                Copy
+                              </Button>
+                            </div>
+                            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                              <pre className="text-xs font-mono whitespace-pre-wrap">
+                                {selectedMcp.codeExamples.python}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedMcp.codeExamples.shell && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium">Shell (cURL)</label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    selectedMcp.codeExamples?.shell || ""
+                                  );
+                                  toast({
+                                    title: "Copied",
+                                    description: "Shell code copied to clipboard",
+                                  });
+                                }}
+                              >
+                                Copy
+                              </Button>
+                            </div>
+                            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                              <pre className="text-xs font-mono whitespace-pre-wrap">
+                                {selectedMcp.codeExamples.shell}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+              </TabsContent>
+
+              <TabsContent value="dashboard" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Generated Code Examples</CardTitle>
-                      <CardDescription>
-                        Code examples generated from your OpenAPI specification.
-                      </CardDescription>
+                      <CardTitle>Your MCPs</CardTitle>
+                      <CardDescription>Manage your submitted MCPs</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {selectedMcp.codeExamples.typescript && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">TypeScript</label>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  selectedMcp.codeExamples?.typescript || ""
-                                );
-                                toast({
-                                  title: "Copied",
-                                  description: "TypeScript code copied to clipboard",
-                                });
-                              }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
-                            <pre className="text-xs font-mono whitespace-pre-wrap">
-                              {selectedMcp.codeExamples.typescript}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedMcp.codeExamples.python && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Python</label>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  selectedMcp.codeExamples?.python || ""
-                                );
-                                toast({
-                                  title: "Copied",
-                                  description: "Python code copied to clipboard",
-                                });
-                              }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
-                            <pre className="text-xs font-mono whitespace-pre-wrap">
-                              {selectedMcp.codeExamples.python}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedMcp.codeExamples.shell && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Shell (cURL)</label>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  selectedMcp.codeExamples?.shell || ""
-                                );
-                                toast({
-                                  title: "Copied",
-                                  description: "Shell code copied to clipboard",
-                                });
-                              }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
-                            <pre className="text-xs font-mono whitespace-pre-wrap">
-                              {selectedMcp.codeExamples.shell}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
+                    <CardContent>
+                      <div className="space-y-4">
+                        {mcps
+                          .filter((mcp) => mcp.owner === account)
+                          .map((mcp) => (
+                            <Card key={mcp.id}>
+                              <CardHeader>
+                                <CardTitle>{mcp.title}</CardTitle>
+                                <CardDescription>{mcp.description}</CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-2">
+                                  <p>
+                                    <strong>Price:</strong> {mcp.price} SAGA tokens
+                                  </p>
+                                  <p>
+                                    <strong>Usage Count:</strong> {mcp.usageCount}
+                                  </p>
+                                  <div className="flex space-x-2">
+                                    <Badge variant={mcp.approved ? "default" : "secondary"}>
+                                      {mcp.approved ? "Approved" : "Pending"}
+                                    </Badge>
+                                    <Badge variant={mcp.active ? "default" : "secondary"}>
+                                      {mcp.active ? "Active" : "Inactive"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
                     </CardContent>
                   </Card>
-                )}
-            </TabsContent>
 
-            <TabsContent value="dashboard" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your MCPs</CardTitle>
-                    <CardDescription>Manage your submitted MCPs</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {mcps
-                        .filter((mcp) => mcp.owner === account)
-                        .map((mcp) => (
-                          <Card key={mcp.id}>
-                            <CardHeader>
-                              <CardTitle>{mcp.title}</CardTitle>
-                              <CardDescription>{mcp.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                <p>
-                                  <strong>Price:</strong> {mcp.price} SAGA tokens
-                                </p>
-                                <p>
-                                  <strong>Usage Count:</strong> {mcp.usageCount}
-                                </p>
-                                <div className="flex space-x-2">
-                                  <Badge variant={mcp.approved ? "default" : "secondary"}>
-                                    {mcp.approved ? "Approved" : "Pending"}
-                                  </Badge>
-                                  <Badge variant={mcp.active ? "default" : "secondary"}>
-                                    {mcp.active ? "Active" : "Inactive"}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Earnings</CardTitle>
-                    <CardDescription>Your MCP earnings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Total Earnings</span>
-                        <span className="text-2xl font-bold">{tokenBalance} NEX</span>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Earnings</CardTitle>
+                      <CardDescription>Your MCP earnings</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Total Earnings</span>
+                          <span className="text-2xl font-bold">{tokenBalance} NEX</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Available Balance</span>
+                          <span className="text-2xl font-bold">{balance} NEX</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Available Balance</span>
-                        <span className="text-2xl font-bold">{balance} NEX</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </main>
     </div>
   );
