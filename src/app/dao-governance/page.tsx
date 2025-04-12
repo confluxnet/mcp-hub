@@ -459,7 +459,7 @@ export default function DaoGovernance() {
                                 <strong>Price:</strong> {mcp.price} SAGA tokens
                               </p>
                               <p>
-                                <strong>API Endpoints:</strong> {mcp.apiEndpoints.join(", ")}
+                                <strong>API Endpoint:</strong> {mcp.apiEndpoints.join(", ")}
                               </p>
                             </div>
                           </CardContent>

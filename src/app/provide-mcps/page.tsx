@@ -22,6 +22,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox";
+import { X } from "lucide-react";
 
 // Import contract ABIs
 import SagaTokenABI from "../../contracts/SagaToken.json";
@@ -95,12 +104,25 @@ export default function ProvideMcps() {
   const [useCase, setUseCase] = useState<string>("");
   const [recommendedMcps, setRecommendedMcps] = useState<MCP[]>([]);
   const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
-  const [apiResponse, setApiResponse] = useState<string>("");
   const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [usageStats, setUsageStats] = useState<{ total: number; today: number }>({
     total: 0,
     today: 0,
   });
+  const [apiParams, setApiParams] = useState<{
+    method: string;
+    path: string;
+    pathParams: { key: string; type: string; required: boolean }[];
+    queryParams: { key: string; type: string; required: boolean }[];
+    bodyParams: { key: string; type: string; required: boolean }[];
+  }>({
+    method: "GET",
+    path: "",
+    pathParams: [],
+    queryParams: [],
+    bodyParams: [],
+  });
+  const [openApiJson, setOpenApiJson] = useState<string>("");
   const { toast } = useToast();
 
   // Use the useWallet hook
@@ -288,6 +310,183 @@ export default function ProvideMcps() {
     }
   };
 
+  // Add a new parameter
+  const addParameter = (type: "path" | "query" | "body") => {
+    if (type === "path") {
+      setApiParams((prev) => ({
+        ...prev,
+        pathParams: [...prev.pathParams, { key: "", type: "string", required: true }],
+      }));
+    } else if (type === "query") {
+      setApiParams((prev) => ({
+        ...prev,
+        queryParams: [...prev.queryParams, { key: "", type: "string", required: false }],
+      }));
+    } else {
+      setApiParams((prev) => ({
+        ...prev,
+        bodyParams: [...prev.bodyParams, { key: "", type: "string", required: false }],
+      }));
+    }
+  };
+
+  // Update a parameter
+  const updateParameter = (
+    type: "path" | "query" | "body",
+    index: number,
+    field: string,
+    value: any
+  ) => {
+    if (type === "path") {
+      setApiParams((prev) => {
+        const newParams = [...prev.pathParams];
+        newParams[index] = { ...newParams[index], [field]: value };
+        return { ...prev, pathParams: newParams };
+      });
+    } else if (type === "query") {
+      setApiParams((prev) => {
+        const newParams = [...prev.queryParams];
+        newParams[index] = { ...newParams[index], [field]: value };
+        return { ...prev, queryParams: newParams };
+      });
+    } else {
+      setApiParams((prev) => {
+        const newParams = [...prev.bodyParams];
+        newParams[index] = { ...newParams[index], [field]: value };
+        return { ...prev, bodyParams: newParams };
+      });
+    }
+  };
+
+  // Remove a parameter
+  const removeParameter = (type: "path" | "query" | "body", index: number) => {
+    if (type === "path") {
+      setApiParams((prev) => ({
+        ...prev,
+        pathParams: prev.pathParams.filter((_, i) => i !== index),
+      }));
+    } else if (type === "query") {
+      setApiParams((prev) => ({
+        ...prev,
+        queryParams: prev.queryParams.filter((_, i) => i !== index),
+      }));
+    } else {
+      setApiParams((prev) => ({
+        ...prev,
+        bodyParams: prev.bodyParams.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  // Generate path from path parameters
+  const generatePath = () => {
+    let path = apiParams.path;
+    apiParams.pathParams.forEach((param) => {
+      path = path.replace(`{${param.key}}`, `:${param.key}`);
+    });
+    return path;
+  };
+
+  // Update path when path parameters change
+  useEffect(() => {
+    const path = generatePath();
+    setApiParams((prev) => ({
+      ...prev,
+      path,
+    }));
+  }, [apiParams.pathParams]);
+
+  // Handle OpenAPI JSON import
+  const handleOpenApiImport = () => {
+    try {
+      const parsedJson = JSON.parse(openApiJson);
+
+      // Extract API information from OpenAPI JSON
+      if (parsedJson.paths) {
+        const paths = Object.keys(parsedJson.paths);
+        if (paths.length > 0) {
+          const firstPath = paths[0];
+          const methods = Object.keys(parsedJson.paths[firstPath]);
+
+          if (methods.length > 0) {
+            const firstMethod = methods[0];
+            const pathInfo = parsedJson.paths[firstPath][firstMethod];
+
+            // Extract path parameters
+            const pathParams: { key: string; type: string; required: boolean }[] = [];
+            const pathRegex = /{([^}]+)}/g;
+            let match;
+            while ((match = pathRegex.exec(firstPath)) !== null) {
+              const paramName = match[1];
+              const paramInfo = pathInfo.parameters?.find(
+                (p: any) => p.name === paramName && p.in === "path"
+              );
+              pathParams.push({
+                key: paramName,
+                type: paramInfo?.schema?.type || "string",
+                required: paramInfo?.required || true,
+              });
+            }
+
+            // Set method and path
+            setApiParams((prev) => ({
+              ...prev,
+              method: firstMethod.toUpperCase(),
+              path: firstPath,
+              pathParams,
+            }));
+
+            // Extract query parameters
+            if (pathInfo.parameters) {
+              const queryParams = pathInfo.parameters
+                .filter((param: any) => param.in === "query")
+                .map((param: any) => ({
+                  key: param.name,
+                  type: param.schema?.type || "string",
+                  required: param.required || false,
+                }));
+
+              setApiParams((prev) => ({
+                ...prev,
+                queryParams,
+              }));
+            }
+
+            // Extract request body
+            if (pathInfo.requestBody?.content?.["application/json"]?.schema?.properties) {
+              const bodyParams = Object.entries(
+                pathInfo.requestBody.content["application/json"].schema.properties
+              ).map(([key, value]: [string, any]) => ({
+                key,
+                type: value.type || "string",
+                required:
+                  pathInfo.requestBody.content["application/json"].schema.required?.includes(key) ||
+                  false,
+              }));
+
+              setApiParams((prev) => ({
+                ...prev,
+                bodyParams,
+              }));
+            }
+
+            toast({
+              title: "OpenAPI JSON Imported",
+              description: "API parameters have been extracted from the OpenAPI JSON.",
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing OpenAPI JSON:", error);
+      toast({
+        title: "Error",
+        description: "Failed to parse OpenAPI JSON. Please check the format.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -367,55 +566,221 @@ export default function ProvideMcps() {
 
                   <div className="space-y-2">
                     <label htmlFor="apiEndpoints" className="text-sm font-medium">
-                      API Endpoints (comma-separated)
+                      API Endpoint
                     </label>
                     <Input
                       id="apiEndpoints"
-                      placeholder="Enter API endpoints"
+                      placeholder="Enter API endpoint"
                       value={selectedMcp?.apiEndpoints?.join(", ") || ""}
                       onChange={handleApiEndpointsChange}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="codeExamples" className="text-sm font-medium">
-                      Code Examples
-                    </label>
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="typescript" className="text-sm font-medium">
-                          TypeScript
-                        </label>
-                        <Textarea
-                          id="typescript"
-                          placeholder="Enter TypeScript example"
-                          value={selectedMcp?.codeExamples?.typescript || ""}
-                          onChange={(e) => handleCodeExampleChange("typescript", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="python" className="text-sm font-medium">
-                          Python
-                        </label>
-                        <Textarea
-                          id="python"
-                          placeholder="Enter Python example"
-                          value={selectedMcp?.codeExamples?.python || ""}
-                          onChange={(e) => handleCodeExampleChange("python", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="shell" className="text-sm font-medium">
-                          Shell
-                        </label>
-                        <Textarea
-                          id="shell"
-                          placeholder="Enter Shell example"
-                          value={selectedMcp?.codeExamples?.shell || ""}
-                          onChange={(e) => handleCodeExampleChange("shell", e.target.value)}
-                        />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">API Parameters</label>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => addParameter("path")}>
+                          Add Path Param
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => addParameter("query")}>
+                          Add Query Param
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => addParameter("body")}>
+                          Add Body Param
+                        </Button>
                       </div>
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">HTTP Method</label>
+                      <Select
+                        value={apiParams.method}
+                        onValueChange={(value) =>
+                          setApiParams((prev) => ({ ...prev, method: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select HTTP method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="GET">GET</SelectItem>
+                          <SelectItem value="POST">POST</SelectItem>
+                          <SelectItem value="PUT">PUT</SelectItem>
+                          <SelectItem value="DELETE">DELETE</SelectItem>
+                          <SelectItem value="PATCH">PATCH</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Base Path</label>
+                      <Input
+                        placeholder="/api/v1/resource"
+                        value={apiParams.path}
+                        onChange={(e) =>
+                          setApiParams((prev) => ({ ...prev, path: e.target.value }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use {"{paramName}"} to define path parameters, e.g., /api/v1/users/
+                        {"{userId}"}
+                      </p>
+                    </div>
+
+                    {apiParams.pathParams.length > 0 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Path Parameters</label>
+                        <div className="space-y-2">
+                          {apiParams.pathParams.map((param, index) => (
+                            <div key={`path-${index}`} className="flex items-center space-x-2">
+                              <Input
+                                placeholder="Parameter name"
+                                value={param.key}
+                                onChange={(e) =>
+                                  updateParameter("path", index, "key", e.target.value)
+                                }
+                                className="flex-1"
+                              />
+                              <Select
+                                value={param.type}
+                                onValueChange={(value) =>
+                                  updateParameter("path", index, "type", value)
+                                }
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue placeholder="Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">String</SelectItem>
+                                  <SelectItem value="number">Number</SelectItem>
+                                  <SelectItem value="integer">Integer</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeParameter("path", index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {apiParams.queryParams.length > 0 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Query Parameters</label>
+                        <div className="space-y-2">
+                          {apiParams.queryParams.map((param, index) => (
+                            <div key={`query-${index}`} className="flex items-center space-x-2">
+                              <Input
+                                placeholder="Parameter name"
+                                value={param.key}
+                                onChange={(e) =>
+                                  updateParameter("query", index, "key", e.target.value)
+                                }
+                                className="flex-1"
+                              />
+                              <Select
+                                value={param.type}
+                                onValueChange={(value) =>
+                                  updateParameter("query", index, "type", value)
+                                }
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue placeholder="Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">String</SelectItem>
+                                  <SelectItem value="number">Number</SelectItem>
+                                  <SelectItem value="boolean">Boolean</SelectItem>
+                                  <SelectItem value="integer">Integer</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className="flex items-center space-x-1">
+                                <Checkbox
+                                  id={`query-required-${index}`}
+                                  checked={param.required}
+                                  onCheckedChange={(checked) =>
+                                    updateParameter("query", index, "required", checked)
+                                  }
+                                />
+                                <label htmlFor={`query-required-${index}`} className="text-xs">
+                                  Required
+                                </label>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeParameter("query", index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {apiParams.bodyParams.length > 0 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Body Parameters</label>
+                        <div className="space-y-2">
+                          {apiParams.bodyParams.map((param, index) => (
+                            <div key={`body-${index}`} className="flex items-center space-x-2">
+                              <Input
+                                placeholder="Parameter name"
+                                value={param.key}
+                                onChange={(e) =>
+                                  updateParameter("body", index, "key", e.target.value)
+                                }
+                                className="flex-1"
+                              />
+                              <Select
+                                value={param.type}
+                                onValueChange={(value) =>
+                                  updateParameter("body", index, "type", value)
+                                }
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue placeholder="Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">String</SelectItem>
+                                  <SelectItem value="number">Number</SelectItem>
+                                  <SelectItem value="boolean">Boolean</SelectItem>
+                                  <SelectItem value="integer">Integer</SelectItem>
+                                  <SelectItem value="object">Object</SelectItem>
+                                  <SelectItem value="array">Array</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className="flex items-center space-x-1">
+                                <Checkbox
+                                  id={`body-required-${index}`}
+                                  checked={param.required}
+                                  onCheckedChange={(checked) =>
+                                    updateParameter("body", index, "required", checked)
+                                  }
+                                />
+                                <label htmlFor={`body-required-${index}`} className="text-xs">
+                                  Required
+                                </label>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeParameter("body", index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -476,11 +841,11 @@ export default function ProvideMcps() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Total Earnings</span>
-                        <span className="text-2xl font-bold">{balance} SAGA</span>
+                        <span className="text-2xl font-bold">{tokenBalance} NEX</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Available Balance</span>
-                        <span className="text-2xl font-bold">{tokenBalance} SAGA</span>
+                        <span className="text-2xl font-bold">{balance} NEX</span>
                       </div>
                     </div>
                   </CardContent>

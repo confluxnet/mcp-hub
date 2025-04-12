@@ -80,7 +80,7 @@ export function Aside({ isSidebarOpen }: AsideProps) {
           <>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Balance:</span>
-              <span>{parseFloat(balance).toFixed(2)} SAGA</span>
+              <span>{parseFloat(balance).toFixed(2)} NEX</span>
             </div>
             <Button
               variant="outline"
