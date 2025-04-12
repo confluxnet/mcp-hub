@@ -4,6 +4,7 @@ import type { Eip1193Provider } from "ethers";
 import { useRouter, usePathname } from "next/navigation";
 
 import { Header } from "@/components/header";
+import { Aside } from "@/components/aside";
 import {
   Card,
   CardContent,
@@ -611,96 +612,29 @@ export function MCPMarketplace() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="relative">
       <Header
         setIsSidebarOpen={setIsSidebarOpen}
         isSidebarOpen={isSidebarOpen}
         setActiveTab={setActiveTab}
       />
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed
-          top-16
-          left-0
-          h-[calc(100vh-4rem)]
-          w-64
-          bg-background
-          border-r
-          transition-transform
-          duration-300
-          ease-in-out
-          z-30
-          flex
-          flex-col
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        <div className="p-4">
-          <h1 className="text-xl font-bold mb-6">MCP HUB</h1>
-          <nav className="space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start pl-4"
-              onClick={() => setActiveTab("usage")}
-            >
-              <BarChart2 className="w-4 h-4 mr-2" />
-              Usage Statistics
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start pl-4"
-              onClick={() => setActiveTab("provide")}
-            >
-              <Package className="w-4 h-4 mr-2" />
-              Provide MCPs
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start pl-4"
-              onClick={() => setActiveTab("dao")}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              DAO Governance
-            </Button>
-          </nav>
-        </div>
-
-        {/* Wallet Section at Bottom */}
-        <div className="mt-auto p-4 border-t space-y-2">
-          {account ? (
-            <>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Balance:</span>
-                <span>{parseFloat(balance).toFixed(2)} SAGA</span>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center"
-                onClick={disconnectWallet}
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                {`${account.slice(0, 6)}...${account.slice(-4)}`}
-              </Button>
-            </>
-          ) : (
-            <Button className="w-full flex items-center justify-center" onClick={connectWallet}>
-              <Wallet className="w-4 h-4 mr-2" />
-              Connect Wallet
-            </Button>
-          )}
-        </div>
-      </aside>
+      <Aside
+        isSidebarOpen={isSidebarOpen}
+        setActiveTab={setActiveTab}
+        account={account}
+        balance={balance}
+        connectWallet={connectWallet}
+        disconnectWallet={disconnectWallet}
+      />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* Main Content Area */}
       <main
-        className={`flex-1 p-6 mt-16 transition-all duration-300 ${
+        className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
           isSidebarOpen ? "md:ml-64" : ""
         }`}
       >
