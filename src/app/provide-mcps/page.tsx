@@ -659,21 +659,47 @@ export default function ProvideMcps() {
         }
 
         // Extract request body
-        if (pathInfo.requestBody?.content?.["application/json"]?.schema?.properties) {
-          const bodyParams = Object.entries(
-            pathInfo.requestBody.content["application/json"].schema.properties
-          ).map(([key, value]: [string, any]) => ({
-            key,
-            type: value.type || "string",
-            required:
-              pathInfo.requestBody.content["application/json"].schema.required?.includes(key) ||
-              false,
-          }));
+        if (pathInfo.requestBody?.content?.["application/json"]?.schema) {
+          const schema = pathInfo.requestBody.content["application/json"].schema;
 
-          setApiParams((prev) => ({
-            ...prev,
-            bodyParams,
-          }));
+          // Handle $ref in schema
+          if (schema.$ref) {
+            // Extract the referenced schema name from the $ref
+            const refName = schema.$ref.split("/").pop();
+            if (refName && parsedJson.components?.schemas?.[refName]) {
+              const referencedSchema = parsedJson.components.schemas[refName];
+
+              // Process the referenced schema
+              if (referencedSchema.properties) {
+                const bodyParams = Object.entries(referencedSchema.properties).map(
+                  ([key, value]: [string, any]) => ({
+                    key,
+                    type: value.type || "string",
+                    required: referencedSchema.required?.includes(key) || false,
+                  })
+                );
+
+                setApiParams((prev) => ({
+                  ...prev,
+                  bodyParams,
+                }));
+              }
+            }
+          } else if (schema.properties) {
+            // Handle direct properties (no $ref)
+            const bodyParams = Object.entries(schema.properties).map(
+              ([key, value]: [string, any]) => ({
+                key,
+                type: value.type || "string",
+                required: schema.required?.includes(key) || false,
+              })
+            );
+
+            setApiParams((prev) => ({
+              ...prev,
+              bodyParams,
+            }));
+          }
         }
 
         // Generate code examples
