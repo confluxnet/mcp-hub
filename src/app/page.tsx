@@ -104,9 +104,9 @@ export default function Home() {
   });
   const { toast } = useToast();
 
-  // Use the useWallet hook
-  const { walletState } = useWallet();
-  const { account, sagaToken, mcpPool, billingSystem } = walletState;
+  // Use the useWallet hook unconditionally
+  const { walletState, connectWallet } = useWallet();
+  const { account, balance, mcpPool, sagaToken, billingSystem } = walletState;
 
   // Handle responsive sidebar
   useEffect(() => {

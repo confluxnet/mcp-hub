@@ -168,9 +168,9 @@ export default function ProvideMcps() {
   const [openApiJson, setOpenApiJson] = useState<string>("");
   const { toast } = useToast();
 
-  // Use the useWallet hook
+  // Use the useWallet hook unconditionally
   const { walletState, connectWallet } = useWallet();
-  const { account, balance, mcpPool } = walletState;
+  const { account, balance, mcpPool, sagaToken, billingSystem } = walletState;
 
   // Handle responsive sidebar
   useEffect(() => {

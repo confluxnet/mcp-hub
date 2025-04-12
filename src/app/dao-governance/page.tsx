@@ -23,13 +23,13 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useWallet } from "@/hooks/useWallet";
 
 // Import contract ABIs
 import SagaTokenABI from "../../contracts/SagaToken.json";
 import MCPPoolABI from "../../contracts/MCPPool.json";
 import SagaDAOABI from "../../contracts/SagaDAO.json";
 import BillingSystemABI from "../../contracts/BillingSystem.json";
-import { useWallet } from "@/hooks/useWallet";
 
 // Contract addresses from environment variables
 const SAGA_TOKEN_ADDRESS =
@@ -112,10 +112,10 @@ export default function DaoGovernance() {
   const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
   const [approvalReason, setApprovalReason] = useState("");
   const { toast } = useToast();
-  const { walletState } = useWallet();
-  const { mcpPool, sagaDao, account } = walletState;
-  const [proposalTitle, setProposalTitle] = useState("");
-  const [proposalDescription, setProposalDescription] = useState("");
+
+  // Use the useWallet hook unconditionally
+  const { walletState, connectWallet } = useWallet();
+  const { account, balance, mcpPool, sagaToken, sagaDao, billingSystem } = walletState;
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -282,11 +282,11 @@ export default function DaoGovernance() {
     try {
       setLoading(true);
       console.log("[DEBUG] account", account);
-      console.log("[DEBUG] proposalTitle", proposalTitle);
-      console.log("[DEBUG] proposalDescription", proposalDescription);
+      console.log("[DEBUG] proposalTitle", newProposal.title);
+      console.log("[DEBUG] proposalDescription", newProposal.description);
 
       // Validate input
-      if (!proposalTitle || !proposalDescription) {
+      if (!newProposal.title || !newProposal.description) {
         toast({
           title: "Error",
           description: "Please fill in all required fields",
@@ -300,13 +300,16 @@ export default function DaoGovernance() {
         [mcpPool.address], // targets: MCPPool 컨트랙트 주소
         [0], // values: ETH 전송량 (0으로 설정)
         [ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [selectedMcp?.id || 0])], // calldatas: approveMCP 함수 호출 데이터
-        proposalDescription // description: 제안 설명
+        newProposal.description // description: 제안 설명
       );
       await tx.wait();
 
       // Reset form
-      setProposalTitle("");
-      setProposalDescription("");
+      setNewProposal({
+        title: "",
+        description: "",
+        duration: "3",
+      });
       setSelectedMcp(null);
 
       toast({
@@ -621,8 +624,8 @@ export default function DaoGovernance() {
                     <Input
                       id="title"
                       placeholder="Enter proposal title"
-                      value={proposalTitle}
-                      onChange={(e) => setProposalTitle(e.target.value)}
+                      value={newProposal.title}
+                      onChange={(e) => setNewProposal({ ...newProposal, title: e.target.value })}
                     />
                   </div>
 
@@ -631,8 +634,10 @@ export default function DaoGovernance() {
                     <Textarea
                       id="description"
                       placeholder="Enter proposal description"
-                      value={proposalDescription}
-                      onChange={(e) => setProposalDescription(e.target.value)}
+                      value={newProposal.description}
+                      onChange={(e) =>
+                        setNewProposal({ ...newProposal, description: e.target.value })
+                      }
                     />
                   </div>
 
@@ -668,7 +673,9 @@ export default function DaoGovernance() {
                 <CardFooter>
                   <Button
                     onClick={handleCreateProposal}
-                    disabled={loading || !proposalTitle || !proposalDescription || !selectedMcp}
+                    disabled={
+                      loading || !newProposal.title || !newProposal.description || !selectedMcp
+                    }
                     className="w-full"
                   >
                     {loading ? "Creating..." : "Create Proposal"}
