@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Plus, X, BookOpen, Save } from "lucide-react";
+import { ArrowLeft, Plus, X, BookOpen, Save, Wallet, AlertTriangle, Loader2 } from "lucide-react";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,8 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { storyProtocol } from "@/lib/storyProtocol";
 import { useStory } from "@/lib/context/StoryContext";
+import { useWallet } from "@/components/providers/SolanaProvider";
+import { useRouter } from "next/navigation";
 
 // Import mock data
 import mcpsData from "@/data/mockMcps.json";
@@ -24,8 +26,9 @@ import mcpsData from "@/data/mockMcps.json";
 export default function CreateRecipePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [account, setAccount] = useState("");
-  const [balance, setBalance] = useState("0");
+  const { isConnected, connecting, connectWallet, openWalletModal, account } = useWallet();
+  const router = useRouter();
+  const { client, isInitialized } = useStory();
   
   // Recipe form state
   const [title, setTitle] = useState("");
@@ -43,6 +46,7 @@ export default function CreateRecipePage() {
   const [shellCode, setShellCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter for MCPs
   const [mcpFilter, setMcpFilter] = useState("");
@@ -74,15 +78,7 @@ export default function CreateRecipePage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const connectWallet = async () => {
-    // Implement wallet connection logic here
-    console.log("Connecting wallet...");
-  };
-
-  const disconnectWallet = () => {
-    // Implement wallet disconnection logic here
-    console.log("Disconnecting wallet...");
-  };
+  // Wallet connection is now handled by the SolanaProvider
 
   const addTag = () => {
     if (newTag && !tags.includes(newTag)) {
@@ -124,17 +120,25 @@ export default function CreateRecipePage() {
     }
   };
 
-  const { client, setTxLoading, setTxHash, setTxName, setCurrentIpId, setLicenseTermsId } = useStory();
+  const { setTxLoading, setTxHash, setTxName, setCurrentIpId, setLicenseTermsId } = useStory();
+  
+  // If wallet disconnects during the process, go back to recipe listing page
+  useEffect(() => {
+    if (!isConnected && !connecting) {
+      router.push('/story-protocol');
+    }
+  }, [isConnected, connecting, router]);
   
   const handleSubmit = async () => {
-    if (!client) {
-      alert("Please connect your wallet to use Story Protocol");
+    if (!isConnected || !client) {
+      setError("Please connect your wallet to use Story Protocol");
       return;
     }
     
     setIsSubmitting(true);
     setTxLoading(true);
     setTxName("Registering Recipe as IP Asset");
+    setError(null);
     
     try {
       // Prepare the metadata for the recipe
@@ -152,15 +156,12 @@ export default function CreateRecipePage() {
         }
       };
       
-      // Use our Story Protocol service to register the recipe
-      const walletAddress = account || "0x1234567890123456789012345678901234567890"; // Fallback for demo
-      
       // Register the recipe on Story Protocol and list it in the marketplace
       const result = await storyProtocol.createAndRegisterRecipe(
         client,
         {
           metadata: recipeMetadata,
-          ownerAddress: walletAddress as `0x${string}`
+          ownerAddress: account as `0x${string}`
         }
       );
       
@@ -180,34 +181,137 @@ export default function CreateRecipePage() {
         // Reset the form after 3 seconds
         setTimeout(() => {
           setShowSuccess(false);
-          // Could redirect to the recipe page here
-          // window.location.href = `/story-protocol/${result.ipId}`;
+          // Redirect to the recipe page
+          router.push(`/story-protocol/${result.ipId}`);
         }, 3000);
       } else {
         console.error("Error in Story Protocol registration:", result.error);
-        alert("There was an error registering your recipe. Please try again.");
+        setError("There was an error registering your recipe. Please try again.");
         setTxLoading(false);
       }
     } catch (error) {
       console.error("Error submitting recipe:", error);
-      alert("There was an error registering your recipe. Please try again.");
+      setError("There was an error registering your recipe. Please try again.");
       setTxLoading(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show connect wallet UI if not connected
+  if (!isConnected) {
+    return (
+      <div className="relative">
+        <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
+        <Aside isSidebarOpen={isSidebarOpen} />
+
+        {/* Overlay for mobile */}
+        {isMobile && isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main
+          className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
+            isSidebarOpen ? "md:ml-64" : ""
+          }`}
+        >
+          <div className="max-w-md mx-auto mt-12">
+            <Link href="/story-protocol" className="inline-flex items-center text-sm text-muted-foreground mb-6">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Story Protocol
+            </Link>
+            
+            <h1 className="text-3xl font-bold mb-6">Create MCP Recipe</h1>
+            
+            <Card className="border-2 border-dashed p-6">
+              <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
+                <div className="bg-primary/10 p-4 rounded-full">
+                  <Wallet className="h-12 w-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Connect Your Wallet</h3>
+                  <p className="text-muted-foreground">
+                    You need to connect your wallet to create and register a recipe.
+                  </p>
+                </div>
+                <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    onClick={openWalletModal}
+                    disabled={connecting}
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Connect Wallet
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Link href="/story-protocol">
+                      Back to Story Protocol
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
+  // Show loading while Story Protocol client initializes
+  if (!isInitialized) {
+    return (
+      <div className="relative">
+        <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
+        <Aside isSidebarOpen={isSidebarOpen} />
+
+        {/* Overlay for mobile */}
+        {isMobile && isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main
+          className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
+            isSidebarOpen ? "md:ml-64" : ""
+          }`}
+        >
+          <div className="max-w-md mx-auto mt-12">
+            <Link href="/story-protocol" className="inline-flex items-center text-sm text-muted-foreground mb-6">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Story Protocol
+            </Link>
+            
+            <h1 className="text-3xl font-bold mb-6">Create MCP Recipe</h1>
+            
+            <Card className="p-12">
+              <div className="flex flex-col items-center justify-center text-center space-y-4">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <h3 className="text-xl font-medium">Initializing Story Protocol Client</h3>
+                <p className="text-muted-foreground">
+                  Please wait while we set up your creation experience...
+                </p>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (
@@ -237,6 +341,15 @@ export default function CreateRecipePage() {
               <BookOpen className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-green-500">
                 Recipe successfully registered on Story Protocol and listed in the marketplace!
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {error && (
+            <Alert className="mb-6 border-red-500 bg-red-500/10">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-red-500">
+                {error}
               </AlertDescription>
             </Alert>
           )}

@@ -10,7 +10,10 @@ import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
 import { TagFilter } from "@/components/tag-filter";
 import { Search } from "@/components/search";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Wallet, AlertTriangle, Loader2 } from "lucide-react";
+import { useWallet } from "@/components/providers/SolanaProvider";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 // Import mock data
 import bundlesData from "@/data/mockStoryProtocolBundles.json";
@@ -20,9 +23,10 @@ export default function StoryProtocolPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [account, setAccount] = useState("");
-  const [balance, setBalance] = useState("0");
   const [bundles, setBundles] = useState(bundlesData.bundles);
+  const { isConnected, connecting, connectWallet, openWalletModal } = useWallet();
+  const router = useRouter();
+  const { toast } = useToast();
 
   // Get all unique tags from bundles
   const allTags = Array.from(
@@ -69,16 +73,6 @@ export default function StoryProtocolPage() {
     setBundles(filteredBundles);
   }, [selectedTags, searchQuery]);
 
-  const connectWallet = async () => {
-    // Implement wallet connection logic here
-    console.log("Connecting wallet...");
-  };
-
-  const disconnectWallet = () => {
-    // Implement wallet disconnection logic here
-    console.log("Disconnecting wallet...");
-  };
-
   const handleTagSelect = (tag: string) => {
     if (selectedTags.includes(tag)) {
       setSelectedTags(selectedTags.filter((t) => t !== tag));
@@ -91,17 +85,88 @@ export default function StoryProtocolPage() {
     setSearchQuery(query);
   };
 
+  const handleCreateRecipe = () => {
+    if (!isConnected) {
+      toast({
+        title: "Wallet connection required",
+        description: "Please connect your wallet to create a recipe",
+        variant: "destructive",
+      });
+      return;
+    }
+    router.push("/story-protocol/create");
+  };
+
+  // If not connected, show connection screen
+  if (!isConnected) {
+    return (
+      <div className="relative">
+        <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
+        <Aside isSidebarOpen={isSidebarOpen} />
+
+        {/* Overlay for mobile */}
+        {isMobile && isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main
+          className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
+            isSidebarOpen ? "md:ml-64" : ""
+          }`}
+        >
+          <div className="max-w-md mx-auto mt-12">
+            <Card className="border-2 border-dashed p-6">
+              <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
+                <div className="bg-primary/10 p-4 rounded-full">
+                  <Wallet className="h-12 w-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Connect Your Wallet</h3>
+                  <p className="text-muted-foreground">
+                    Story Protocol requires a wallet connection to access its features.
+                  </p>
+                </div>
+                <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    onClick={openWalletModal}
+                    disabled={connecting}
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Connect Wallet
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Link href="/">
+                      Return to Home
+                    </Link>
+                  </Button>
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <span>Your wallet is used to interact with the Story Protocol blockchain</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
-
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (
@@ -122,11 +187,9 @@ export default function StoryProtocolPage() {
                 registered as IP on Story Protocol.
               </p>
             </div>
-            <Button className="mt-4 lg:mt-0" asChild>
-              <Link href="/story-protocol/create">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Create Recipe
-              </Link>
+            <Button className="mt-4 lg:mt-0" onClick={handleCreateRecipe}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Create Recipe
             </Button>
           </div>
 
@@ -164,10 +227,8 @@ export default function StoryProtocolPage() {
                     <li>Receive royalties when others use their recipes</li>
                   </ul>
                   <div className="flex flex-col space-y-2 mt-4">
-                    <Button asChild>
-                      <Link href="/story-protocol/create">
-                        Create Your Own Recipe
-                      </Link>
+                    <Button onClick={handleCreateRecipe}>
+                      Create Your Own Recipe
                     </Button>
                     <Button variant="outline" asChild>
                       <Link href="https://www.storyprotocol.xyz" target="_blank" rel="noopener noreferrer">
@@ -220,7 +281,7 @@ export default function StoryProtocolPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="flex justify-between pt-0">
-                      <Button variant="outline" className="w-1/2">
+                      <Button variant="outline" className="w-1/2" asChild>
                         <Link href={`/story-protocol/${bundle.id}`}>
                           Details
                         </Link>

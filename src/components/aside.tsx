@@ -1,25 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { BarChart2, Package, Users, Wallet, BookOpen } from "lucide-react";
+import { BarChart2, Package, Users, Wallet, BookOpen, Loader2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useWallet } from "@/components/providers/SolanaProvider";
 
 interface AsideProps {
   isSidebarOpen: boolean;
-  account: string;
-  balance: string;
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
 }
 
-export function Aside({
-  isSidebarOpen,
-  account,
-  balance,
-  connectWallet,
-  disconnectWallet,
-}: AsideProps) {
+export function Aside({ isSidebarOpen }: AsideProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { isConnected, connecting, account, balance, walletName, connectWallet, disconnectWallet, openWalletModal } = useWallet();
 
   const menuItems = [
     {
@@ -68,7 +60,8 @@ export function Aside({
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isSelected = pathname === item.href;
+            const isSelected = pathname === item.href || 
+                              (pathname.startsWith(item.href) && item.href !== "/");
 
             return (
               <Button
@@ -89,7 +82,7 @@ export function Aside({
 
       {/* Wallet Section at Bottom */}
       <div className="mt-auto p-4 border-t space-y-2">
-        {account ? (
+        {isConnected && account ? (
           <>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Balance:</span>
@@ -101,13 +94,29 @@ export function Aside({
               onClick={disconnectWallet}
             >
               <Wallet className="w-4 h-4 mr-2" />
-              {`${account.slice(0, 6)}...${account.slice(-4)}`}
+              <span className="flex flex-col">
+                <span>{`${account.slice(0, 6)}...${account.slice(-4)}`}</span>
+                <span className="text-xs text-muted-foreground">{walletName}</span>
+              </span>
             </Button>
           </>
         ) : (
-          <Button className="w-full flex items-center justify-center" onClick={connectWallet}>
-            <Wallet className="w-4 h-4 mr-2" />
-            Connect Wallet
+          <Button 
+            className="w-full flex items-center justify-center" 
+            onClick={openWalletModal}
+            disabled={connecting}
+          >
+            {connecting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Wallet className="w-4 h-4 mr-2" />
+                Connect Wallet
+              </>
+            )}
           </Button>
         )}
       </div>

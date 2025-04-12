@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Wallet, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InfoIcon, ArrowRight } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { CodeBlock } from "@/components/CodeBlock";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
+import { useWallet } from "@/components/providers/SolanaProvider";
 
 // Import mock data
 import bundlesData from "@/data/mockStoryProtocolBundles.json";
@@ -35,8 +36,8 @@ export default function BundlePage({ params }: { params: { id: string } }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [account, setAccount] = useState("");
-  const [balance, setBalance] = useState("0");
+  const { isConnected, connecting, connectWallet, openWalletModal } = useWallet();
+  const router = useRouter();
 
   const bundle = getBundleData(params.id);
 
@@ -63,27 +64,77 @@ export default function BundlePage({ params }: { params: { id: string } }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const connectWallet = async () => {
-    // Implement wallet connection logic here
-    console.log("Connecting wallet...");
-  };
+  // If not connected, show connection screen
+  if (!isConnected) {
+    return (
+      <div className="relative">
+        <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
+        <Aside isSidebarOpen={isSidebarOpen} />
 
-  const disconnectWallet = () => {
-    // Implement wallet disconnection logic here
-    console.log("Disconnecting wallet...");
-  };
+        {/* Overlay for mobile */}
+        {isMobile && isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main
+          className={`min-h-screen p-6 mt-16 transition-all duration-300 ${
+            isSidebarOpen ? "md:ml-64" : ""
+          }`}
+        >
+          <div className="max-w-md mx-auto mt-12">
+            <Card className="border-2 border-dashed p-6">
+              <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
+                <div className="bg-primary/10 p-4 rounded-full">
+                  <Wallet className="h-12 w-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Connect Your Wallet</h3>
+                  <p className="text-muted-foreground">
+                    Story Protocol requires a wallet connection to access its features.
+                  </p>
+                </div>
+                <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    onClick={openWalletModal}
+                    disabled={connecting}
+                  >
+                    {connecting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Connect Wallet
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Link href="/">
+                      Return to Home
+                    </Link>
+                  </Button>
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <span>Your wallet is used to interact with the Story Protocol blockchain</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (
