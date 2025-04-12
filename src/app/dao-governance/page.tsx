@@ -58,22 +58,17 @@ interface MCP {
   id: string;
   title: string;
   description: string;
+  price: number;
+  apiEndpoints: string[];
+  codeExamples: Record<string, any>;
   tags: string[];
   icon: string;
   category: string;
   usageCount: number;
-  rating: number;
-  price: number;
   owner: string;
   approved: boolean;
   active: boolean;
-  apiEndpoints: string[];
   revenue: number;
-  codeExamples?: {
-    typescript: string;
-    python: string;
-    shell: string;
-  };
 }
 
 interface Proposal {
@@ -114,11 +109,13 @@ export default function DaoGovernance() {
     description: "",
     duration: "3", // days
   });
-  const [selectedMcp, setSelectedMcp] = useState<string | null>(null);
+  const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
   const [approvalReason, setApprovalReason] = useState("");
   const { toast } = useToast();
   const { walletState } = useWallet();
-  const { mcpPool, sagaDao } = walletState;
+  const { mcpPool, sagaDao, account } = walletState;
+  const [proposalTitle, setProposalTitle] = useState("");
+  const [proposalDescription, setProposalDescription] = useState("");
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -144,7 +141,7 @@ export default function DaoGovernance() {
       setLoading(true);
       // This is a placeholder - you'll need to implement the actual contract call
       try {
-        const mcpsData = await mcpPool.getMcps();
+        const mcpsData = await mcpPool.getMCP(0);
         console.log(mcpsData);
 
         const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
@@ -280,13 +277,16 @@ export default function DaoGovernance() {
 
   // Create a new proposal
   const handleCreateProposal = async () => {
-    if (!sagaDao) return;
+    if (!sagaDao || !account || !mcpPool) return;
 
     try {
       setLoading(true);
+      console.log("[DEBUG] account", account);
+      console.log("[DEBUG] proposalTitle", proposalTitle);
+      console.log("[DEBUG] proposalDescription", proposalDescription);
 
       // Validate input
-      if (!newProposal.title || !newProposal.description) {
+      if (!proposalTitle || !proposalDescription) {
         toast({
           title: "Error",
           description: "Please fill in all required fields",
@@ -295,31 +295,27 @@ export default function DaoGovernance() {
         return;
       }
 
-      // Convert duration to seconds
-      const durationInSeconds = parseInt(newProposal.duration) * 24 * 60 * 60;
-
-      // Submit proposal to the contract
-      const tx = await sagaDao.createProposal(
-        newProposal.title,
-        newProposal.description,
-        durationInSeconds
+      // Create proposal
+      const tx = await sagaDao.propose(
+        [mcpPool.address], // targets: MCPPool 컨트랙트 주소
+        [0], // values: ETH 전송량 (0으로 설정)
+        [ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [selectedMcp?.id || 0])], // calldatas: approveMCP 함수 호출 데이터
+        proposalDescription // description: 제안 설명
       );
       await tx.wait();
 
       // Reset form
-      setNewProposal({
-        title: "",
-        description: "",
-        duration: "3",
+      setProposalTitle("");
+      setProposalDescription("");
+      setSelectedMcp(null);
+
+      toast({
+        title: "Success",
+        description: "Proposal created successfully",
       });
 
       // Reload proposals
       await loadProposals();
-
-      toast({
-        title: "Success",
-        description: "Proposal created successfully.",
-      });
     } catch (error) {
       console.error("Error creating proposal:", error);
       toast({
@@ -470,9 +466,9 @@ export default function DaoGovernance() {
                               <Textarea
                                 id={`reason-${mcp.id}`}
                                 placeholder="Enter your reason for approval or rejection"
-                                value={selectedMcp === mcp.id ? approvalReason : ""}
+                                value={selectedMcp === mcp ? approvalReason : ""}
                                 onChange={(e) => {
-                                  setSelectedMcp(mcp.id);
+                                  setSelectedMcp(mcp);
                                   setApprovalReason(e.target.value);
                                 }}
                               />
@@ -625,8 +621,8 @@ export default function DaoGovernance() {
                     <Input
                       id="title"
                       placeholder="Enter proposal title"
-                      value={newProposal.title}
-                      onChange={(e) => setNewProposal({ ...newProposal, title: e.target.value })}
+                      value={proposalTitle}
+                      onChange={(e) => setProposalTitle(e.target.value)}
                     />
                   </div>
 
@@ -635,39 +631,44 @@ export default function DaoGovernance() {
                     <Textarea
                       id="description"
                       placeholder="Enter proposal description"
-                      value={newProposal.description}
-                      onChange={(e) =>
-                        setNewProposal({ ...newProposal, description: e.target.value })
-                      }
+                      value={proposalDescription}
+                      onChange={(e) => setProposalDescription(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Voting Duration (days)</Label>
-                    <RadioGroup
-                      value={newProposal.duration}
-                      onValueChange={(value) => setNewProposal({ ...newProposal, duration: value })}
-                      className="flex space-x-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="1" id="duration-1" />
-                        <Label htmlFor="duration-1">1 day</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3" id="duration-3" />
-                        <Label htmlFor="duration-3">3 days</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="7" id="duration-7" />
-                        <Label htmlFor="duration-7">7 days</Label>
-                      </div>
-                    </RadioGroup>
+                    <Label>Select MCP to Approve</Label>
+                    <div className="grid gap-4">
+                      {pendingMcps.map((mcp) => (
+                        <Card
+                          key={mcp.id}
+                          className={`cursor-pointer transition-colors ${
+                            selectedMcp?.id === mcp.id ? "border-primary" : ""
+                          }`}
+                          onClick={() => setSelectedMcp(mcp)}
+                        >
+                          <CardHeader>
+                            <CardTitle className="text-lg">{mcp.title}</CardTitle>
+                            <CardDescription>{mcp.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                              {mcp.tags.map((tag) => (
+                                <Badge key={tag} variant="secondary">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
                   <Button
                     onClick={handleCreateProposal}
-                    disabled={loading || !newProposal.title || !newProposal.description}
+                    disabled={loading || !proposalTitle || !proposalDescription || !selectedMcp}
                     className="w-full"
                   >
                     {loading ? "Creating..." : "Create Proposal"}

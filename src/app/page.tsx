@@ -132,7 +132,7 @@ export default function Home() {
       setLoading(true);
       // This is a placeholder - you'll need to implement the actual contract call
       try {
-        const mcpsData = await mcpPool.getMcps();
+        const mcpsData = await mcpPool.getMCP(0);
 
         const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
           id: mcp.id,
