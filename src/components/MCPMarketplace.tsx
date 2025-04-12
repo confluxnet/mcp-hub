@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import type { Eip1193Provider } from "ethers";
+import { useRouter, usePathname } from "next/navigation";
+
+import { Header } from "@/components/header";
 import {
   Card,
   CardContent,
@@ -17,7 +20,21 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { InfoIcon } from "lucide-react";
+import {
+  InfoIcon,
+  Search,
+  Filter,
+  Wallet,
+  Menu,
+  X,
+  BarChart2,
+  Package,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  PanelRight,
+} from "lucide-react";
 
 // Import contract ABIs
 import SagaTokenABI from "../contracts/SagaToken.json";
@@ -87,6 +104,8 @@ interface MCP {
   revenue: number;
 }
 
+type TabType = "usage" | "provide" | "dao";
+
 interface Proposal {
   id: number;
   title: string;
@@ -109,7 +128,12 @@ declare global {
 }
 
 export function MCPMarketplace() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [account, setAccount] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<TabType>("usage");
   const [sagaToken, setSagaToken] = useState<ethers.Contract | null>(null);
   const [mcpPool, setMcpPool] = useState<ethers.Contract | null>(null);
   const [sagaDao, setSagaDao] = useState<ethers.Contract | null>(null);
@@ -128,6 +152,30 @@ export function MCPMarketplace() {
   });
   const [balance, setBalance] = useState("0");
   const { toast } = useToast();
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Handle navigation
+  const handleNavigation = (path: string) => {
+    router.push(path);
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   // Connect wallet and initialize contracts
   const connectWallet = async () => {
@@ -538,373 +586,372 @@ export function MCPMarketplace() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 w-[100%]">
-      {/* Wallet Connection Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Connect Wallet</CardTitle>
-          <CardDescription>Connect your MetaMask wallet to use the MCP Marketplace</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!account ? (
-            <div className="space-y-4">
-              <Button onClick={connectWallet} disabled={loading}>
-                {loading ? "Connecting..." : "Connect MetaMask"}
-              </Button>
-              <div className="text-sm text-gray-500">
-                <p>Make sure you have MetaMask installed to use this application.</p>
+    <div className="min-h-screen flex">
+      <Header
+        setIsSidebarOpen={setIsSidebarOpen}
+        isSidebarOpen={isSidebarOpen}
+        setActiveTab={setActiveTab}
+      />
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed
+          top-16
+          left-0
+          h-[calc(100vh-4rem)]
+          w-64
+          bg-background
+          border-r
+          transition-transform
+          duration-300
+          ease-in-out
+          z-30
+          flex
+          flex-col
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <div className="p-4">
+          <h1 className="text-xl font-bold mb-6">MCP HUB</h1>
+          <nav className="space-y-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-start pl-4"
+              onClick={() => setActiveTab("usage")}
+            >
+              <BarChart2 className="w-4 h-4 mr-2" />
+              Usage Statistics
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start pl-4"
+              onClick={() => setActiveTab("provide")}
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Provide MCPs
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start pl-4"
+              onClick={() => setActiveTab("dao")}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              DAO Governance
+            </Button>
+          </nav>
+        </div>
+
+        {/* Connect Wallet Button at Bottom */}
+        <div className="mt-auto p-4 border-t">
+          <Button
+            className="w-full flex items-center justify-center"
+            onClick={connectWallet}
+            variant={account ? "outline" : "default"}
+          >
+            <Wallet className="w-4 h-4 mr-2" />
+            {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Connect Wallet"}
+          </Button>
+        </div>
+      </aside>
+
+      {/* Overlay for mobile */}
+      {isMobile && isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-20" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      {/* Main Content Area */}
+      <main
+        className={`flex-1 p-6 mt-16 transition-all duration-300 ${
+          isSidebarOpen ? "md:ml-64" : ""
+        }`}
+      >
+        <div className="max-w-7xl mx-auto">
+          {activeTab === "usage" && (
+            <>
+              {/* Search and Filter Section */}
+              <div className="mb-6 space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Find MCPs for your use case..."
+                        className="pl-10"
+                        value={useCase}
+                        onChange={(e) => setUseCase(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={findMcpsForUseCase} disabled={loading || !useCase.trim()}>
+                    {loading ? "Searching..." : "Search"}
+                  </Button>
+                  <Button variant="outline">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p>Connected Account: {account}</p>
-              <p>SAGA Token Balance: {balance} SAGA</p>
-            </div>
+
+              {/* MCP Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {mcps.map((mcp) => (
+                  <Card key={mcp.id}>
+                    <CardHeader>
+                      <CardTitle>{mcp.name}</CardTitle>
+                      <CardDescription>{mcp.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <p>
+                          <strong>Price:</strong> {mcp.price} SAGA tokens
+                        </p>
+                        <p>
+                          <strong>Owner:</strong> {mcp.owner.slice(0, 6)}...{mcp.owner.slice(-4)}
+                        </p>
+                        <p>
+                          <strong>Usage Count:</strong> {mcp.usageCount}
+                        </p>
+                        <div className="flex space-x-2">
+                          <Badge variant={mcp.approved ? "default" : "secondary"}>
+                            {mcp.approved ? "Approved" : "Pending"}
+                          </Badge>
+                          <Badge variant={mcp.active ? "default" : "secondary"}>
+                            {mcp.active ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        onClick={() => handleUseMcp(mcp)}
+                        disabled={loading || !mcp.approved || !mcp.active}
+                        className="w-full"
+                      >
+                        Use MCP
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Main Tabs */}
-      <Tabs defaultValue="use">
-        <TabsList className="flex w-full justify-center gap-2">
-          <TabsTrigger value="use" className="flex-1 text-center">
-            Use MCPs
-          </TabsTrigger>
-          <TabsTrigger value="provide" className="flex-1 text-center">
-            Provide MCPs
-          </TabsTrigger>
-          <TabsTrigger value="dao" className="flex-1 text-center">
-            DAO Governance
-          </TabsTrigger>
-        </TabsList>
+          {activeTab === "provide" && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit MCP for DAO Approval</CardTitle>
+                  <CardDescription>Create a new MCP and submit it for DAO approval</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mcpName">MCP Name</Label>
+                    <Input id="mcpName" placeholder="e.g., Sentiment Analysis API" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mcpDescription">Description</Label>
+                    <Textarea
+                      id="mcpDescription"
+                      placeholder="Describe what your MCP does and how it can be used"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mcpPrice">Price (SAGA tokens)</Label>
+                    <Input id="mcpPrice" type="number" placeholder="e.g., 10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="apiEndpoints">API Endpoints (one per line)</Label>
+                    <Textarea id="apiEndpoints" placeholder="https://api.example.com/sentiment" />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const name = (document.getElementById("mcpName") as HTMLInputElement).value;
+                      const description = (
+                        document.getElementById("mcpDescription") as HTMLInputElement
+                      ).value;
+                      const price = (document.getElementById("mcpPrice") as HTMLInputElement).value;
+                      const endpoints = (
+                        document.getElementById("apiEndpoints") as HTMLInputElement
+                      ).value
+                        .split("\n")
+                        .filter((endpoint) => endpoint.trim() !== "");
 
-        {/* Use MCPs Tab */}
-        <TabsContent value="use" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Find MCPs for Your Use Case</CardTitle>
-              <CardDescription>
-                Describe what you want to do, and we&apos;ll find the right MCPs for you
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="useCase">What do you want to do?</Label>
-                <Textarea
-                  id="useCase"
-                  placeholder="e.g., I want to analyze sentiment in social media posts"
-                  value={useCase}
-                  onChange={(e) => setUseCase(e.target.value)}
-                />
-              </div>
-              <Button onClick={findMcpsForUseCase} disabled={loading || !useCase.trim()}>
-                {loading ? "Searching..." : "Find MCPs"}
-              </Button>
-            </CardContent>
-          </Card>
+                      if (name && description && price && endpoints.length > 0) {
+                        submitMcpForApproval(name, description, price, endpoints);
+                      } else {
+                        toast({
+                          title: "Missing Information",
+                          description: "Please fill in all fields",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    Submit for DAO Approval
+                  </Button>
+                </CardContent>
+              </Card>
 
-          {/* Recommended MCPs */}
-          {recommendedMcps.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Recommended MCPs</CardTitle>
-                <CardDescription>These MCPs match your use case</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {recommendedMcps.map((mcp) => (
-                    <Card key={mcp.id}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Provider Dashboard</CardTitle>
+                  <CardDescription>Manage your MCPs and earnings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
                       <CardHeader>
-                        <CardTitle>{mcp.name}</CardTitle>
-                        <CardDescription>{mcp.description}</CardDescription>
+                        <CardTitle>Your MCPs</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
-                          <p>
-                            <strong>Price:</strong> {mcp.price} SAGA tokens
-                          </p>
-                          <p>
-                            <strong>Owner:</strong> {mcp.owner}
-                          </p>
-                          <p>
-                            <strong>Usage Count:</strong> {mcp.usageCount}
-                          </p>
-                          <div className="flex space-x-2">
-                            <Badge variant={mcp.approved ? "default" : "secondary"}>
-                              {mcp.approved ? "Approved" : "Pending"}
-                            </Badge>
-                            <Badge variant={mcp.active ? "default" : "secondary"}>
-                              {mcp.active ? "Active" : "Inactive"}
-                            </Badge>
+                        {mcps.filter((mcp) => mcp.owner === account).length > 0 ? (
+                          <div className="space-y-4">
+                            {mcps
+                              .filter((mcp) => mcp.owner === account)
+                              .map((mcp) => (
+                                <div key={mcp.id} className="border p-4 rounded-md">
+                                  <h3 className="font-bold">{mcp.name}</h3>
+                                  <p className="text-sm text-gray-500">{mcp.description}</p>
+                                  <div className="flex space-x-2 mt-2">
+                                    <Badge variant={mcp.approved ? "default" : "secondary"}>
+                                      {mcp.approved ? "Approved" : "Pending"}
+                                    </Badge>
+                                    <Badge variant={mcp.active ? "default" : "secondary"}>
+                                      {mcp.active ? "Active" : "Inactive"}
+                                    </Badge>
+                                  </div>
+                                  <div className="mt-2">
+                                    <p>
+                                      <strong>Usage:</strong> {mcp.usageCount} calls
+                                    </p>
+                                    <p>
+                                      <strong>Revenue:</strong> {mcp.revenue} SAGA
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
                           </div>
+                        ) : (
+                          <p>You haven't created any MCPs yet</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Earnings</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between">
+                            <span>Available Balance</span>
+                            <span id="providerBalance">Loading...</span>
+                          </div>
+                          <Button onClick={withdrawProviderFunds} disabled={loading}>
+                            Withdraw Funds
+                          </Button>
                         </div>
                       </CardContent>
-                      <CardFooter>
-                        <Button
-                          onClick={() => handleUseMcp(mcp)}
-                          disabled={loading || !mcp.approved || !mcp.active}
-                          className="w-full"
-                        >
-                          Use MCP
-                        </Button>
-                      </CardFooter>
                     </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
-          {/* API Response */}
-          {selectedMcp && apiResponse && (
-            <Card>
-              <CardHeader>
-                <CardTitle>API Response from {selectedMcp.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
-                  {apiResponse}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
+          {activeTab === "dao" && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>DAO Governance</CardTitle>
+                  <CardDescription>
+                    Participate in the governance of the MCP Marketplace
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert>
+                      <InfoIcon className="h-4 w-4" />
+                      <AlertTitle>DAO Information</AlertTitle>
+                      <AlertDescription>
+                        As a SAGA token holder, you can participate in governance by voting on
+                        proposals. The more tokens you hold, the more voting power you have.
+                      </AlertDescription>
+                    </Alert>
 
-          {/* Usage Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Usage Statistics</CardTitle>
-              <CardDescription>Your MCP usage and token consumption</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Usage</span>
-                  <span>{usageStats.total} calls</span>
-                </div>
-                <Progress value={(usageStats.total / 100) * 100} />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Today&apos;s Usage</span>
-                  <span>{usageStats.today} calls</span>
-                </div>
-                <Progress value={(usageStats.today / 20) * 100} />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Token Balance</span>
-                  <span>{tokenBalance} SAGA</span>
-                </div>
-                <Progress value={(parseFloat(tokenBalance) / parseFloat(balance)) * 100} />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Provide MCPs Tab */}
-        <TabsContent value="provide" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Submit MCP for DAO Approval</CardTitle>
-              <CardDescription>Create a new MCP and submit it for DAO approval</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mcpName">MCP Name</Label>
-                <Input id="mcpName" placeholder="e.g., Sentiment Analysis API" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mcpDescription">Description</Label>
-                <Textarea
-                  id="mcpDescription"
-                  placeholder="Describe what your MCP does and how it can be used"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mcpPrice">Price (SAGA tokens)</Label>
-                <Input id="mcpPrice" type="number" placeholder="e.g., 10" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiEndpoints">API Endpoints (one per line)</Label>
-                <Textarea id="apiEndpoints" placeholder="https://api.example.com/sentiment" />
-              </div>
-              <Button
-                onClick={() => {
-                  const name = (document.getElementById("mcpName") as HTMLInputElement).value;
-                  const description = (
-                    document.getElementById("mcpDescription") as HTMLInputElement
-                  ).value;
-                  const price = (document.getElementById("mcpPrice") as HTMLInputElement).value;
-                  const endpoints = (
-                    document.getElementById("apiEndpoints") as HTMLInputElement
-                  ).value
-                    .split("\n")
-                    .filter((endpoint) => endpoint.trim() !== "");
-
-                  if (name && description && price && endpoints.length > 0) {
-                    submitMcpForApproval(name, description, price, endpoints);
-                  } else {
-                    toast({
-                      title: "Missing Information",
-                      description: "Please fill in all fields",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                disabled={loading}
-              >
-                Submit for DAO Approval
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Provider Dashboard */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Provider Dashboard</CardTitle>
-              <CardDescription>Manage your MCPs and earnings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your MCPs</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {mcps.filter((mcp) => mcp.owner === account).length > 0 ? (
+                    <h3 className="text-lg font-medium">Active Proposals</h3>
+                    {proposals.length > 0 ? (
                       <div className="space-y-4">
-                        {mcps
-                          .filter((mcp) => mcp.owner === account)
-                          .map((mcp) => (
-                            <div key={mcp.id} className="border p-4 rounded-md">
-                              <h3 className="font-bold">{mcp.name}</h3>
-                              <p className="text-sm text-gray-500">{mcp.description}</p>
-                              <div className="flex space-x-2 mt-2">
-                                <Badge variant={mcp.approved ? "default" : "secondary"}>
-                                  {mcp.approved ? "Approved" : "Pending"}
-                                </Badge>
-                                <Badge variant={mcp.active ? "default" : "secondary"}>
-                                  {mcp.active ? "Active" : "Inactive"}
-                                </Badge>
-                              </div>
-                              <div className="mt-2">
+                        {proposals.map((proposal) => (
+                          <Card key={proposal.id}>
+                            <CardHeader>
+                              <CardTitle>{proposal.title}</CardTitle>
+                              <CardDescription>{proposal.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
                                 <p>
-                                  <strong>Usage:</strong> {mcp.usageCount} calls
+                                  <strong>Proposer:</strong> {proposal.proposer}
                                 </p>
+                                <div className="flex justify-between">
+                                  <span>For: {proposal.forVotes} votes</span>
+                                  <span>Against: {proposal.againstVotes} votes</span>
+                                </div>
+                                <Progress
+                                  value={
+                                    proposal.forVotes + proposal.againstVotes > 0
+                                      ? (proposal.forVotes /
+                                          (proposal.forVotes + proposal.againstVotes)) *
+                                        100
+                                      : 0
+                                  }
+                                />
                                 <p>
-                                  <strong>Revenue:</strong> {mcp.revenue} SAGA
+                                  <strong>Status:</strong>{" "}
+                                  {proposal.executed ? "Executed" : "Active"}
                                 </p>
                               </div>
-                            </div>
-                          ))}
+                            </CardContent>
+                            <CardFooter className="flex space-x-2">
+                              <Button
+                                onClick={() => voteOnProposal(proposal.id, true)}
+                                disabled={loading || proposal.executed}
+                                className="flex-1"
+                              >
+                                Vote For
+                              </Button>
+                              <Button
+                                onClick={() => voteOnProposal(proposal.id, false)}
+                                disabled={loading || proposal.executed}
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                Vote Against
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
                       </div>
                     ) : (
-                      <p>You haven&apos;t created any MCPs yet</p>
+                      <p>No active proposals</p>
                     )}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Earnings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span>Available Balance</span>
-                        <span id="providerBalance">Loading...</span>
-                      </div>
-                      <Button onClick={withdrawProviderFunds} disabled={loading}>
-                        Withdraw Funds
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* DAO Governance Tab */}
-        <TabsContent value="dao" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>DAO Governance</CardTitle>
-              <CardDescription>
-                Participate in the governance of the MCP Marketplace
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Alert>
-                  <InfoIcon className="h-4 w-4" />
-                  <AlertTitle>DAO Information</AlertTitle>
-                  <AlertDescription>
-                    As a SAGA token holder, you can participate in governance by voting on
-                    proposals. The more tokens you hold, the more voting power you have.
-                  </AlertDescription>
-                </Alert>
-
-                <h3 className="text-lg font-medium">Active Proposals</h3>
-                {proposals.length > 0 ? (
-                  <div className="space-y-4">
-                    {proposals.map((proposal) => (
-                      <Card key={proposal.id}>
-                        <CardHeader>
-                          <CardTitle>{proposal.title}</CardTitle>
-                          <CardDescription>{proposal.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            <p>
-                              <strong>Proposer:</strong> {proposal.proposer}
-                            </p>
-                            <div className="flex justify-between">
-                              <span>For: {proposal.forVotes} votes</span>
-                              <span>Against: {proposal.againstVotes} votes</span>
-                            </div>
-                            <Progress
-                              value={
-                                proposal.forVotes + proposal.againstVotes > 0
-                                  ? (proposal.forVotes /
-                                      (proposal.forVotes + proposal.againstVotes)) *
-                                    100
-                                  : 0
-                              }
-                            />
-                            <p>
-                              <strong>Status:</strong> {proposal.executed ? "Executed" : "Active"}
-                            </p>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="flex space-x-2">
-                          <Button
-                            onClick={() => voteOnProposal(proposal.id, true)}
-                            disabled={loading || proposal.executed}
-                            className="flex-1"
-                          >
-                            Vote For
-                          </Button>
-                          <Button
-                            onClick={() => voteOnProposal(proposal.id, false)}
-                            disabled={loading || proposal.executed}
-                            variant="outline"
-                            className="flex-1"
-                          >
-                            Vote Against
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
                   </div>
-                ) : (
-                  <p>No active proposals</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
