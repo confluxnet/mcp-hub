@@ -305,6 +305,49 @@ export default function DaoGovernance() {
       // 트랜잭션 완료 대기
       await tx.wait();
 
+      // If approved, post to mcp-list API
+      if (approve) {
+        const mcpToApprove = mcps.find((mcp) => mcp.id === mcpId);
+        if (mcpToApprove) {
+          try {
+            const response = await fetch("/api/mcp-list", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                id: mcpToApprove.id,
+                title: mcpToApprove.title,
+                description: mcpToApprove.description,
+                price: mcpToApprove.price,
+                apiEndpoints: mcpToApprove.apiEndpoints,
+                codeExamples: mcpToApprove.codeExamples,
+                tags: mcpToApprove.tags,
+                icon: mcpToApprove.icon,
+                category: mcpToApprove.category,
+                usageCount: mcpToApprove.usageCount,
+                owner: mcpToApprove.owner,
+                approved: true,
+                active: true,
+                revenue: mcpToApprove.revenue,
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error("Failed to post to mcp-list API");
+            }
+          } catch (error) {
+            console.error("Error posting to mcp-list API:", error);
+            toast({
+              title: "Warning",
+              description:
+                "MCP was approved but failed to post to the marketplace. Please try again later.",
+              variant: "destructive",
+            });
+          }
+        }
+      }
+
       // Reset form
       setSelectedMcp(null);
       setApprovalReason("");

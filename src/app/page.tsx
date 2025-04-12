@@ -104,6 +104,7 @@ export default function Home() {
 
   // Handle responsive sidebar
   useEffect(() => {
+    loadMcps();
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -124,8 +125,9 @@ export default function Home() {
       setLoading(true);
 
       // Fetch MCPs from Firestore
-      const response = await fetch("/api/mcps");
+      const response = await fetch("/api/mcp-list");
       const result = await response.json();
+      console.log("result", result);
 
       if (result.mcps) {
         // Filter only approved and active MCPs
@@ -299,7 +301,7 @@ export default function Home() {
 
           {/* Mock Tools Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mcps.map((mcp) => (
+            {[...mcps].reverse().map((mcp) => (
               <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
                 <Card className="h-full hover:shadow-lg transition-shadow duration-200">
                   <CardHeader>

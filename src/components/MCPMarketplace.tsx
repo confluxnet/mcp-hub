@@ -750,37 +750,43 @@ export default function MCPMarketplace() {
                   </div>
                 </div>
 
-                {/* Mock tools grid */}
+                {/* MCPs grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {mockMcps.map((mcp) => (
-                    <Link href={`/mcp/${mcp.id}`} key={mcp.id}>
-                      <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                        <CardHeader>
-                          <div className="flex items-center space-x-2">
-                            <div className="p-2 bg-primary/10 rounded-lg">{mcp.icon}</div>
-                            <div>
-                              <CardTitle className="text-lg">{mcp.title}</CardTitle>
-                              <Badge variant="secondary" className="mt-1">
-                                {mcp.category}
-                              </Badge>
+                  {mcps.length > 0 ? (
+                    [...mcps].reverse().map((mcp) => (
+                      <Link href={`/mcp/${mcp.id}`} key={mcp.id}>
+                        <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                          <CardHeader>
+                            <div className="flex items-center space-x-2">
+                              <div className="p-2 bg-primary/10 rounded-lg">{mcp.icon || "📦"}</div>
+                              <div>
+                                <CardTitle className="text-lg">{mcp.title}</CardTitle>
+                                <Badge variant="secondary" className="mt-1">
+                                  {mcp.category || "Uncategorized"}
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">{mcp.description}</p>
-                          <div className="flex items-center justify-between mt-4">
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4 text-yellow-400" />
-                              <span className="text-sm">{mcp.rating}</span>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{mcp.description}</p>
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-4 h-4 text-yellow-400" />
+                                <span className="text-sm">{mcp.rating || "N/A"}</span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {mcp.usageCount || 0} uses
+                              </span>
                             </div>
-                            <span className="text-sm text-muted-foreground">
-                              {mcp.usageCount} uses
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No MCPs available</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
