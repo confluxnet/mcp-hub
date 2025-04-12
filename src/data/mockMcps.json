@@ -1,7 +1,49 @@
 {
   "mcps": [
     {
+      "id": "0",
+      "title": "NEAR Price Alert Assistant",
+      "description": "Set price targets for NEAR and get alerts.",
+      "tags": ["NEAR", "Price", "Alerts", "Blockchain"],
+      "icon": "🔔",
+      "category": "Blockchain",
+      "usageCount": 1,
+      "rating": 4.8,
+      "price": 3,
+      "owner": "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net/chat"],
+      "revenue": 28350,
+      "codeExamples": {
+        "shell": "# Example Shell implementation\ncurl -X POST https://f1uyuh74gnj0c7-8000.proxy.runpod.net/chat \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"user_message\": \"Set an alert for NEAR when it reaches $5\"\n  }'",
+        "mcp_server_connection": "{\n  \"near-price-alert\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
+      }
+    },
+    {
       "id": "1",
+      "title": "Analyze Transaction",
+      "description": "Analyzes an Ethereum transaction synchronously:\n1. Fetches the call trace using debug_traceTransaction (BLOCKING CALL).\n2. Generates a text summary of the trace.\n3. Creates a Mermaid sequence diagram.\n4. (If Google API key is configured) Gets an AI interpretation (BLOCKING CALL).\nWARNING: This endpoint is synchronous and will block the server thread.\n         Use with caution, especially under load.",
+      "tags": ["Ethereum", "Analysis", "Blockchain", "Debug"],
+      "icon": "🔍",
+      "category": "Blockchain",
+      "usageCount": 5,
+      "rating": 4.6,
+      "price": 3,
+      "owner": "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": [
+        "https://f1uyuh74gnj0c7-8002.proxy.runpod.net/analyze/transaction/{tx_hash}"
+      ],
+      "revenue": 46900,
+      "codeExamples": {
+        "shell": "# Example Shell implementation\ncurl -X GET \"https://f1uyuh74gnj0c7-8002.proxy.runpod.net/analyze/transaction/0x1234567890123456789012345678901234567890123456789012345678901234\" \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"",
+        "mcp_server_connection": "{\n  \"transaction-analyzer\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
+      }
+    },
+    {
+      "id": "2",
       "title": "AI Model Context",
       "description": "Context management for AI models with advanced prompt engineering. This protocol enables seamless integration of AI models with blockchain data, providing a standardized way to handle model contexts and prompts.",
       "tags": ["AI", "Web3"],
@@ -16,13 +58,12 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/contexts"],
       "revenue": 12340,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { MCPClient } from '@mcp/client';\n\nconst client = new MCPClient({\n  apiKey: 'your-api-key'\n});\n\nconst context = await client.createContext({\n  model: 'gpt-4',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000\n  }\n});",
-        "python": "# Example Python implementation\nfrom mcp_client import MCPClient\n\nclient = MCPClient(api_key='your-api-key')\n\ncontext = client.create_context(\n    model='gpt-4',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000\n    }\n)",
-        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"max_tokens\": 1000\n    }\n  }'"
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"maxTokens\": 1000\n    }\n  }'",
+        "mcp_server_connection": "{\n  \"ai-model-context\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     },
     {
-      "id": "2",
+      "id": "3",
       "title": "Blockchain Data Protocol",
       "description": "Standardized protocol for blockchain data access and manipulation. This protocol provides a unified interface for interacting with various blockchain networks.",
       "tags": ["Blockchain", "DeFi"],
@@ -37,13 +78,12 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/blockchain"],
       "revenue": 35175,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { BlockchainClient } from '@mcp/blockchain';\n\nconst client = new BlockchainClient({\n  apiKey: 'your-api-key'\n});\n\nconst data = await client.getBlockData({\n  chain: 'ethereum',\n  blockNumber: 12345678\n});",
-        "python": "# Example Python implementation\nfrom mcp_blockchain import BlockchainClient\n\nclient = BlockchainClient(api_key='your-api-key')\n\ndata = client.get_block_data(\n    chain='ethereum',\n    block_number=12345678\n)",
-        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/blockchain/ethereum/blocks/12345678 \\\n  -H \"Authorization: Bearer your-api-key\""
+        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/blockchain/ethereum/blocks/12345678 \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"",
+        "mcp_server_connection": "{\n  \"blockchain-data\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     },
     {
-      "id": "3",
+      "id": "4",
       "title": "Smart Contract Integration",
       "description": "Seamless integration of smart contracts with traditional applications. This protocol provides tools for interacting with smart contracts across multiple blockchain networks.",
       "tags": ["Smart Contracts", "DeFi"],
@@ -58,13 +98,12 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/contracts"],
       "revenue": 69120,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { ContractClient } from '@mcp/contracts';\n\nconst client = new ContractClient({\n  apiKey: 'your-api-key'\n});\n\nconst result = await client.executeContract({\n  address: '0x1234567890123456789012345678901234567890',\n  method: 'transfer',\n  params: ['0x9876543210987654321098765432109876543210', 1000000]\n});",
-        "python": "# Example Python implementation\nfrom mcp_contracts import ContractClient\n\nclient = ContractClient(api_key='your-api-key')\n\nresult = client.execute_contract(\n    address='0x1234567890123456789012345678901234567890',\n    method='transfer',\n    params=['0x9876543210987654321098765432109876543210', 1000000]\n)",
-        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contracts/0x1234567890123456789012345678901234567890/execute \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"method\": \"transfer\",\n    \"params\": [\"0x9876543210987654321098765432109876543210\", 1000000]\n  }'"
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contracts/0x1234567890123456789012345678901234567890/execute \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"method\": \"transfer\",\n    \"params\": [\"0x9876543210987654321098765432109876543210\", 1000000]\n  }'",
+        "mcp_server_connection": "{\n  \"smart-contract\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     },
     {
-      "id": "4",
+      "id": "5",
       "title": "Decentralized Storage",
       "description": "Protocol for decentralized storage solutions. This protocol provides a standardized way to store and retrieve data from various decentralized storage networks.",
       "tags": ["Storage", "IPFS"],
@@ -79,13 +118,12 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/storage"],
       "revenue": 36536,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { StorageClient } from '@mcp/storage';\n\nconst client = new StorageClient({\n  apiKey: 'your-api-key'\n});\n\nconst cid = await client.uploadFile({\n  file: fileBuffer,\n  name: 'document.pdf',\n  type: 'application/pdf'\n});",
-        "python": "# Example Python implementation\nfrom mcp_storage import StorageClient\n\nclient = StorageClient(api_key='your-api-key')\n\ncid = client.upload_file(\n    file=file_buffer,\n    name='document.pdf',\n    type='application/pdf'\n)",
-        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/storage/upload \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -F \"file=@document.pdf\" \\\n  -F \"name=document.pdf\" \\\n  -F \"type=application/pdf\""
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/storage/upload \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -F \"file=@document.pdf\" \\\n  -F \"name=document.pdf\" \\\n  -F \"type=application/pdf\"",
+        "mcp_server_connection": "{\n  \"decentralized-storage\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     },
     {
-      "id": "5",
+      "id": "6",
       "title": "Cross-Chain Bridge",
       "description": "Protocol for cross-chain asset transfers. This protocol enables seamless transfer of assets between different blockchain networks.",
       "tags": ["Cross-Chain", "Bridge"],
@@ -100,13 +138,12 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/bridge"],
       "revenue": 68136,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { BridgeClient } from '@mcp/bridge';\n\nconst client = new BridgeClient({\n  apiKey: 'your-api-key'\n});\n\nconst tx = await client.transfer({\n  fromChain: 'ethereum',\n  toChain: 'polygon',\n  token: '0x1234567890123456789012345678901234567890',\n  amount: '1000000000000000000',\n  recipient: '0x9876543210987654321098765432109876543210'\n});",
-        "python": "# Example Python implementation\nfrom mcp_bridge import BridgeClient\n\nclient = BridgeClient(api_key='your-api-key')\n\ntx = client.transfer(\n    from_chain='ethereum',\n    to_chain='polygon',\n    token='0x1234567890123456789012345678901234567890',\n    amount='1000000000000000000',\n    recipient='0x9876543210987654321098765432109876543210'\n)",
-        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/bridge/transfer \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"fromChain\": \"ethereum\",\n    \"toChain\": \"polygon\",\n    \"token\": \"0x1234567890123456789012345678901234567890\",\n    \"amount\": \"1000000000000000000\",\n    \"recipient\": \"0x9876543210987654321098765432109876543210\"\n  }'"
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/bridge/transfer \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"fromChain\": \"ethereum\",\n    \"toChain\": \"polygon\",\n    \"token\": \"0x1234567890123456789012345678901234567890\",\n    \"amount\": \"1000000000000000000\",\n    \"recipient\": \"0x9876543210987654321098765432109876543210\"\n  }'",
+        "mcp_server_connection": "{\n  \"cross-chain-bridge\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     },
     {
-      "id": "6",
+      "id": "7",
       "title": "Oracle Integration",
       "description": "Protocol for integrating oracle services. This protocol provides a standardized way to access off-chain data for smart contracts.",
       "tags": ["Oracle", "Data"],
@@ -121,9 +158,50 @@
       "apiEndpoints": ["https://api.mcp.dog/v1/oracle"],
       "revenue": 169725,
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { OracleClient } from '@mcp/oracle';\n\nconst client = new OracleClient({\n  apiKey: 'your-api-key'\n});\n\nconst price = await client.getPrice({\n  asset: 'ETH',\n  currency: 'USD'\n});",
-        "python": "# Example Python implementation\nfrom mcp_oracle import OracleClient\n\nclient = OracleClient(api_key='your-api-key')\n\nprice = client.get_price(\n    asset='ETH',\n    currency='USD'\n)",
-        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/oracle/price/ETH/USD \\\n  -H \"Authorization: Bearer your-api-key\""
+        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/oracle/price/ETH/USD \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"",
+        "mcp_server_connection": "{\n  \"oracle-integration\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Transaction Analysis Protocol",
+      "description": "Advanced protocol for analyzing Ethereum transactions with detailed call traces, text summaries, and Mermaid sequence diagrams. Provides comprehensive transaction analysis with optional AI interpretation.",
+      "tags": ["Blockchain", "Analysis", "Ethereum"],
+      "icon": "🔍",
+      "category": "Blockchain",
+      "usageCount": 3456,
+      "rating": 4.7,
+      "price": 18,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": [
+        "https://f1uyuh74gnj0c7-8002.proxy.runpod.net/analyze/transaction/{tx_hash}"
+      ],
+      "revenue": 62208,
+      "codeExamples": {
+        "shell": "# Example Shell implementation\ncurl -X GET \"https://f1uyuh74gnj0c7-8002.proxy.runpod.net/analyze/transaction/0x1234567890123456789012345678901234567890123456789012345678901234\" \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"",
+        "mcp_server_connection": "{\n  \"transaction-analysis\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
+      }
+    },
+    {
+      "id": "9",
+      "title": "AI Model Integration Protocol",
+      "description": "Protocol for integrating AI models with blockchain applications. Provides standardized interfaces for AI model inference, context management, and prompt engineering.",
+      "tags": ["AI", "Blockchain", "Integration"],
+      "icon": "🧠",
+      "category": "AI",
+      "usageCount": 2789,
+      "rating": 4.6,
+      "price": 22,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net/openapi.json"],
+      "revenue": 61358,
+      "codeExamples": {
+        "shell": "# Example Shell implementation\ncurl -X POST https://f1uyuh74gnj0c7-8000.proxy.runpod.net/invoke \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"modelId\": \"gpt-4\",\n    \"prompt\": \"Analyze this blockchain transaction\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"maxTokens\": 1000\n    }\n  }'",
+        "mcp_server_connection": "{\n  \"ai-model-integration\": {\n    \"command\": \"npx\",\n    \"args\": [\"agent-tools-mcp\", \"--api-key\", \"mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\"]\n  }\n}"
       }
     }
   ]

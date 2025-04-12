@@ -17,9 +17,9 @@
       "revenue": 12340,
 
       "codeExamples": {
-        "typescript": "// Example TypeScript implementation\nimport { MCPClient } from '@mcp/client';\n\nconst client = new MCPClient({\n  apiKey: 'your-api-key'\n});\n\nconst context = await client.createContext({\n  model: 'gpt-4',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000\n  }\n});",
-        "python": "# Example Python implementation\nfrom mcp_client import MCPClient\n\nclient = MCPClient(api_key='your-api-key')\n\ncontext = client.create_context(\n    model='gpt-4',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000\n    }\n)",
-        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"max_tokens\": 1000\n    }\n  }'"
+        "typescript": "// Example TypeScript implementation\nimport { MCPClient } from '@mcp/client';\n\nconst client = new MCPClient({\n  apiKey: 'mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8'\n});\n\nconst context = await client.createContext({\n  model: 'gpt-4',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000\n  }\n});",
+        "python": "# Example Python implementation\nfrom mcp_client import MCPClient\n\nclient = MCPClient(api_key='mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8')\n\ncontext = client.create_context(\n    model='gpt-4',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000\n    }\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"max_tokens\": 1000\n    }\n  }'"
       },
       "openApiJson": {
         "openapi": "3.0.0",

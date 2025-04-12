@@ -142,15 +142,11 @@ export default function McpPage({ params }: { params: { id: string } }) {
                 <CardContent>
                   <Tabs defaultValue="typescript" className="w-full">
                     <TabsList className="mb-4">
-                      <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-                      <TabsTrigger value="python">Python</TabsTrigger>
+                      <TabsTrigger value="mcp_server_connection">MCP Server Connection</TabsTrigger>
                       <TabsTrigger value="shell">Shell</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="typescript">
-                      <CodeBlock language="typescript" code={mcp.codeExamples.typescript} />
-                    </TabsContent>
-                    <TabsContent value="python">
-                      <CodeBlock language="python" code={mcp.codeExamples.python} />
+                    <TabsContent value="mcp_server_connection">
+                      <CodeBlock language="json" code={mcp.codeExamples.mcp_server_connection} />
                     </TabsContent>
                     <TabsContent value="shell">
                       <CodeBlock language="shell" code={mcp.codeExamples.shell} />
