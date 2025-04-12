@@ -90,9 +90,7 @@ export async function mintNFTWithStoryProtocol(
       storyClient,
       {
         metadata: recipeMetadata,
-        ownerAddress: to,
-        tokenId: tokenId,
-        tokenURI: uri
+        ownerAddress: to
       }
     );
     

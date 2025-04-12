@@ -484,11 +484,11 @@ export function MCPStatsSimple() {
               {userTier.tier !== rewardsTiers[rewardsTiers.length - 1].tier ? (
                 <>
                   <Progress 
-                    value={(totalCalls / rewardsTiers.find(t => t.minUsage > totalCalls)?.minUsage) * 100} 
+                    value={(totalCalls / (rewardsTiers.find(t => t.minUsage > totalCalls)?.minUsage || 1)) * 100} 
                     className="h-2 mb-2" 
                   />
                   <p className="text-sm text-muted-foreground">
-                    You need {(rewardsTiers.find(t => t.minUsage > totalCalls)?.minUsage - totalCalls).toLocaleString()} more API calls to reach the next tier.
+                    You need {((rewardsTiers.find(t => t.minUsage > totalCalls)?.minUsage || 0) - totalCalls).toLocaleString()} more API calls to reach the next tier.
                   </p>
                 </>
               ) : (

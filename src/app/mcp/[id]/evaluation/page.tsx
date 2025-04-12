@@ -117,7 +117,7 @@ const mockDatasets: Dataset[] = [
 
 export default function MCPEvaluationPage() {
   const params = useParams();
-  const mcpId = params.id as string;
+  const mcpId = params?.id as string;
   const { toast } = useToast();
   
   // State

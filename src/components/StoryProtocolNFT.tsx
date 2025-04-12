@@ -88,7 +88,7 @@ export function StoryProtocolNFT() {
     const mockIpfsUri = `ipfs://Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
     
     try {
-      const mintResult = await mintNFT(account, mockIpfsUri, metadata);
+      const mintResult = await mintNFT(account as `0x${string}`, mockIpfsUri, metadata);
       
       // Update Story Protocol balance if allocation is enabled
       if (allocateBalance && mintResult.success) {

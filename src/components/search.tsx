@@ -12,7 +12,7 @@ interface SearchResult {
     title: string;
     description: string;
     tags: string[];
-    score?: number;
+    score?: number | number[] | number[][];
 }
 
 export function Search({
@@ -107,7 +107,7 @@ export function Search({
             }));
 
             // Sort by score in descending order
-            return scoredResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+            return scoredResults.sort((a, b) => ((b.score as number || 0) - (a.score as number || 0)));
         } catch (error) {
             console.error("Error performing semantic search:", error);
             return performBasicSearch(searchQuery);

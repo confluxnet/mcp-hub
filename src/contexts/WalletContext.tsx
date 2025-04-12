@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { ethers } from "ethers";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import * as ethers from "ethers";
 import type { Eip1193Provider } from "ethers";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -83,7 +83,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   });
 
   // Connect wallet and initialize contracts
-  const connectWallet = async (showToast = true) => {
+  const connectWallet = useCallback(async (showToast = true) => {
     try {
       setLoading(true);
 
@@ -197,7 +197,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   // Disconnect wallet
   const disconnectWallet = () => {
@@ -254,7 +254,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     };
 
     loadWalletStateFromStorage();
-  }, []);
+  }, [connectWallet]);
 
   // Save wallet state to localStorage whenever it changes
   useEffect(() => {
@@ -265,7 +265,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     };
 
     localStorage.setItem("walletState", JSON.stringify(serializableState));
-  }, [walletState.account, walletState.balance, connectWallet]);
+  }, [walletState.account, walletState.balance]);
 
   const value = {
     walletState,
