@@ -474,21 +474,23 @@ export function MCPMarketplace() {
     }
   };
 
-  // Find MCPs based on use case
+  // This function is now handled by the Search component
+  // Keep this as a fallback or for non-UI search operations
   const findMcpsForUseCase = async () => {
     if (!useCase.trim()) return;
 
     try {
       setLoading(true);
-
-      // This is a placeholder - in a real implementation, you would call an AI service
-      // to analyze the use case and recommend MCPs
+      
+      // The actual search logic is now in the Search component
+      // This is kept for compatibility with other parts of the code
       const recommended = mcps.filter(
         (mcp) =>
           mcp.approved &&
           mcp.active &&
           (mcp.title.toLowerCase().includes(useCase.toLowerCase()) ||
-            mcp.description.toLowerCase().includes(useCase.toLowerCase()))
+            mcp.description.toLowerCase().includes(useCase.toLowerCase()) ||
+            mcp.tags.some(tag => tag.toLowerCase().includes(useCase.toLowerCase())))
       );
 
       setRecommendedMcps(recommended);
@@ -657,23 +659,30 @@ export function MCPMarketplace() {
         <div className="max-w-7xl mx-auto">
           {activeTab === "usage" && (
             <>
-              {/* Search and Filter Section */}
+              {/* Search Section */}
               <div className="mb-6 space-y-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Find MCPs for your use case..."
-                        className="pl-10"
-                        value={useCase}
-                        onChange={(e) => setUseCase(e.target.value)}
+                      <Search
+                        items={mockMcps}
+                        onSearch={(query, results) => {
+                          setUseCase(query);
+                          if (results) {
+                            const filtered = results.filter(mcp => mcp.approved && mcp.active);
+                            setRecommendedMcps(filtered);
+                            if (filtered.length === 0 && query.trim() !== '') {
+                              toast({
+                                title: "No MCPs Found",
+                                description: "No MCPs match your use case. Try a different search.",
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        }}
                       />
                     </div>
                   </div>
-                  <Button onClick={findMcpsForUseCase} disabled={loading || !useCase.trim()}>
-                    {loading ? "Searching..." : "Search"}
-                  </Button>
                   <Button variant="outline">
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
