@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import type { Eip1193Provider } from "ethers";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
@@ -42,6 +43,9 @@ import SagaTokenABI from "../contracts/SagaToken.json";
 import MCPPoolABI from "../contracts/MCPPool.json";
 import SagaDAOABI from "../contracts/SagaDAO.json";
 import BillingSystemABI from "../contracts/BillingSystem.json";
+
+// Import mock data
+import mockMcpsData from "@/data/mockMcps.json";
 
 // Contract addresses from environment variables
 const SAGA_TOKEN_ADDRESS =
@@ -93,16 +97,25 @@ function AlertDescription({ children }: { children: React.ReactNode }) {
 }
 
 interface MCP {
-  id: number;
-  name: string;
+  id: string;
+  title: string;
   description: string;
+  tags: string[];
+  icon: string;
+  category: string;
+  usageCount: number;
+  rating: number;
   price: number;
   owner: string;
   approved: boolean;
   active: boolean;
   apiEndpoints: string[];
-  usageCount: number;
   revenue: number;
+  codeExamples?: {
+    typescript: string;
+    python: string;
+    shell: string;
+  };
 }
 
 type TabType = "usage" | "provide" | "dao";
@@ -127,6 +140,9 @@ declare global {
     ethereum?: Record<string, unknown>;
   }
 }
+
+// Remove mockTools array and use mockMcpsData.mcps instead
+const mockMcps = mockMcpsData.mcps;
 
 export function MCPMarketplace() {
   const router = useRouter();
@@ -304,16 +320,21 @@ export function MCPMarketplace() {
         const mcpsData = await mcpPool.getMcps();
 
         const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
-          id: mcp.id.toNumber(),
-          name: mcp.name,
+          id: mcp.id,
+          title: mcp.title,
           description: mcp.description,
+          tags: mcp.tags || [],
+          icon: mcp.icon,
+          category: mcp.category,
+          usageCount: mcp.usageCount.toNumber(),
+          rating: mcp.rating,
           price: parseFloat(ethers.formatEther(mcp.price)),
           owner: mcp.owner,
           approved: mcp.approved,
           active: mcp.active,
           apiEndpoints: mcp.apiEndpoints || [],
-          usageCount: mcp.usageCount.toNumber(),
           revenue: parseFloat(ethers.formatEther(mcp.revenue)),
+          codeExamples: mcp.codeExamples,
         }));
 
         setMcps(formattedMcps);
@@ -466,7 +487,7 @@ export function MCPMarketplace() {
         (mcp) =>
           mcp.approved &&
           mcp.active &&
-          (mcp.name.toLowerCase().includes(useCase.toLowerCase()) ||
+          (mcp.title.toLowerCase().includes(useCase.toLowerCase()) ||
             mcp.description.toLowerCase().includes(useCase.toLowerCase()))
       );
 
@@ -531,7 +552,7 @@ export function MCPMarketplace() {
 
       toast({
         title: "MCP Used Successfully",
-        description: `You have used ${mcp.name} and paid ${mcp.price} SAGA tokens`,
+        description: `You have used ${mcp.title} and paid ${mcp.price} SAGA tokens`,
       });
 
       // Reload MCPs to update usage count
@@ -665,46 +686,87 @@ export function MCPMarketplace() {
                 </div>
               </div>
 
-              {/* MCP Cards Grid */}
+              {/* Mock Tools Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mcps.map((mcp) => (
-                  <Card key={mcp.id}>
-                    <CardHeader>
-                      <CardTitle>{mcp.name}</CardTitle>
-                      <CardDescription>{mcp.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <p>
-                          <strong>Price:</strong> {mcp.price} SAGA tokens
-                        </p>
-                        <p>
-                          <strong>Owner:</strong> {mcp.owner.slice(0, 6)}...{mcp.owner.slice(-4)}
-                        </p>
-                        <p>
-                          <strong>Usage Count:</strong> {mcp.usageCount}
-                        </p>
-                        <div className="flex space-x-2">
-                          <Badge variant={mcp.approved ? "default" : "secondary"}>
-                            {mcp.approved ? "Approved" : "Pending"}
-                          </Badge>
-                          <Badge variant={mcp.active ? "default" : "secondary"}>
-                            {mcp.active ? "Active" : "Inactive"}
-                          </Badge>
+                {mockMcps.map((mcp) => (
+                  <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
+                    <Card className="h-full hover:shadow-lg transition-shadow duration-200">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-2xl">{mcp.icon}</span>
+                            <CardTitle>{mcp.title}</CardTitle>
+                          </div>
+                          <Badge variant="secondary">{mcp.category}</Badge>
                         </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        onClick={() => handleUseMcp(mcp)}
-                        disabled={loading || !mcp.approved || !mcp.active}
-                        className="w-full"
-                      >
-                        Use MCP
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                        <CardDescription>{mcp.description}</CardDescription>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {mcp.tags.map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center space-x-1">
+                            <span>⭐</span>
+                            <span>{mcp.rating}</span>
+                          </div>
+                          <div className="text-muted-foreground">
+                            {mcp.usageCount.toLocaleString()} uses
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
+              </div>
+
+              {/* Original MCP Cards Grid */}
+              <div className="mt-8">
+                <h2 className="text-xl font-bold mb-4">Available MCPs</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {mcps.map((mcp) => (
+                    <Card key={mcp.id}>
+                      <CardHeader>
+                        <CardTitle>{mcp.title}</CardTitle>
+                        <CardDescription>{mcp.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <p>
+                            <strong>Price:</strong> {mcp.price} SAGA tokens
+                          </p>
+                          <p>
+                            <strong>Owner:</strong> {mcp.owner.slice(0, 6)}...{mcp.owner.slice(-4)}
+                          </p>
+                          <p>
+                            <strong>Usage Count:</strong> {mcp.usageCount}
+                          </p>
+                          <div className="flex space-x-2">
+                            <Badge variant={mcp.approved ? "default" : "secondary"}>
+                              {mcp.approved ? "Approved" : "Pending"}
+                            </Badge>
+                            <Badge variant={mcp.active ? "default" : "secondary"}>
+                              {mcp.active ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button
+                          onClick={() => handleUseMcp(mcp)}
+                          disabled={loading || !mcp.approved || !mcp.active}
+                          className="w-full"
+                        >
+                          Use MCP
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -784,7 +846,7 @@ export function MCPMarketplace() {
                               .filter((mcp) => mcp.owner === account)
                               .map((mcp) => (
                                 <div key={mcp.id} className="border p-4 rounded-md">
-                                  <h3 className="font-bold">{mcp.name}</h3>
+                                  <h3 className="font-bold">{mcp.title}</h3>
                                   <p className="text-sm text-gray-500">{mcp.description}</p>
                                   <div className="flex space-x-2 mt-2">
                                     <Badge variant={mcp.approved ? "default" : "secondary"}>

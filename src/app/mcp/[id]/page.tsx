@@ -9,197 +9,138 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { notFound } from "next/navigation";
+import { CodeBlock } from "@/components/CodeBlock";
+import { InfoIcon } from "lucide-react";
 
-// This will be replaced with actual data fetching
-const mockMCPs = {
-  "1": {
-    id: "1",
-    title: "AI Model Context",
-    description:
-      "Context management for AI models with advanced prompt engineering. This protocol enables seamless integration of AI models with blockchain data, providing a standardized way to handle model contexts and prompts.",
-    tags: ["AI", "Web3"],
-    codeExamples: {
-      typescript: `// Example TypeScript implementation
-import { MCPClient } from '@mcp/client';
+// Import mock data
+import mockMcpsData from "@/data/mockMcps.json";
 
-const client = new MCPClient({
-  apiKey: 'your-api-key'
-});
-
-const context = await client.createContext({
-  model: 'gpt-4',
-  parameters: {
-    temperature: 0.7,
-    maxTokens: 1000
-  }
-});`,
-      python: `# Example Python implementation
-from mcp_client import MCPClient
-
-client = MCPClient(api_key='your-api-key')
-
-context = client.create_context(
-    model='gpt-4',
-    parameters={
-        'temperature': 0.7,
-        'max_tokens': 1000
-    }
-)`,
-      shell: `# Example Shell implementation
-curl -X POST https://api.mcp.dog/v1/contexts \\
-  -H "Authorization: Bearer your-api-key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-4",
-    "parameters": {
-      "temperature": 0.7,
-      "max_tokens": 1000
-    }
-  }'`,
-    },
-  },
-  "2": {
-    id: "2",
-    title: "Blockchain Data Protocol",
-    description:
-      "Standardized protocol for blockchain data access and manipulation. This protocol provides a unified interface for interacting with various blockchain networks.",
-    tags: ["Blockchain", "DeFi"],
-    codeExamples: {
-      typescript: `// Example TypeScript implementation
-import { BlockchainClient } from '@mcp/blockchain';
-
-const client = new BlockchainClient({
-  apiKey: 'your-api-key'
-});
-
-const data = await client.getBlockData({
-  chain: 'ethereum',
-  blockNumber: 12345678
-});`,
-      python: `# Example Python implementation
-from mcp_blockchain import BlockchainClient
-
-client = BlockchainClient(api_key='your-api-key')
-
-data = client.get_block_data(
-    chain='ethereum',
-    block_number=12345678
-)`,
-      shell: `# Example Shell implementation
-curl -X GET https://api.mcp.dog/v1/blockchain/ethereum/blocks/12345678 \\
-  -H "Authorization: Bearer your-api-key"`,
-    },
-  },
+// Get MCP data from the mock data
+const getMcpData = (id: string) => {
+  const mcp = mockMcpsData.mcps.find((mcp) => mcp.id === id);
+  if (!mcp) return null;
+  return mcp;
 };
 
-export default function MCPDetailPage({ params }: { params: { id: string } }) {
-  // Use the id from params to get the correct MCP
-  const mcp = mockMCPs[params.id as keyof typeof mockMCPs] || mockMCPs["1"];
+export default function McpPage({ params }: { params: { id: string } }) {
+  const mcp = getMcpData(params.id);
+
+  if (!mcp) {
+    notFound();
+  }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        <div className="flex items-center">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to MCPs
-            </Button>
-          </Link>
+    <div className="container mx-auto py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">{mcp.title}</h1>
+        <p className="text-muted-foreground mb-4">{mcp.description}</p>
+        <div className="flex flex-wrap gap-2">
+          {mcp.tags.map((tag, index) => (
+            <Badge key={index} variant="secondary">
+              {tag}
+            </Badge>
+          ))}
         </div>
-
-        <div>
-          <h1 className="text-4xl font-bold">{mcp.title}</h1>
-          <p className="text-lg text-muted-foreground mt-2">{mcp.description}</p>
-          <div className="flex gap-2 mt-4">
-            {mcp.tags.map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <Tabs defaultValue="typescript" className="w-full">
-          <TabsList>
-            <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-            <TabsTrigger value="python">Python</TabsTrigger>
-            <TabsTrigger value="shell">Shell</TabsTrigger>
-          </TabsList>
-          <TabsContent value="typescript">
-            <Card>
-              <CardHeader>
-                <CardTitle>TypeScript Implementation</CardTitle>
-                <CardDescription>Example code using TypeScript</CardDescription>
-              </CardHeader>
-              <CardContent className="relative p-0">
-                <div className="relative">
-                  <CopyButton text={mcp.codeExamples.typescript} />
-                  <SyntaxHighlighter
-                    language="typescript"
-                    style={oneDark}
-                    customStyle={{
-                      margin: 0,
-                      borderRadius: "0.5rem",
-                      padding: "1rem",
-                    }}
-                  >
-                    {mcp.codeExamples.typescript}
-                  </SyntaxHighlighter>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="python">
-            <Card>
-              <CardHeader>
-                <CardTitle>Python Implementation</CardTitle>
-                <CardDescription>Example code using Python</CardDescription>
-              </CardHeader>
-              <CardContent className="relative p-0">
-                <div className="relative">
-                  <CopyButton text={mcp.codeExamples.python} />
-                  <SyntaxHighlighter
-                    language="python"
-                    style={oneDark}
-                    customStyle={{
-                      margin: 0,
-                      borderRadius: "0.5rem",
-                      padding: "1rem",
-                    }}
-                  >
-                    {mcp.codeExamples.python}
-                  </SyntaxHighlighter>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="shell">
-            <Card>
-              <CardHeader>
-                <CardTitle>Shell Implementation</CardTitle>
-                <CardDescription>Example code using cURL</CardDescription>
-              </CardHeader>
-              <CardContent className="relative p-0">
-                <div className="relative">
-                  <CopyButton text={mcp.codeExamples.shell} />
-                  <SyntaxHighlighter
-                    language="bash"
-                    style={oneDark}
-                    customStyle={{
-                      margin: 0,
-                      borderRadius: "0.5rem",
-                      padding: "1rem",
-                    }}
-                  >
-                    {mcp.codeExamples.shell}
-                  </SyntaxHighlighter>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
-    </main>
+
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="code">Code Examples</TabsTrigger>
+          <TabsTrigger value="api">API Reference</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <Card>
+            <CardHeader>
+              <CardTitle>Overview</CardTitle>
+              <CardDescription>
+                Learn how to integrate {mcp.title} into your application
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-2">
+                  <InfoIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Getting Started</h3>
+                    <p className="text-sm text-muted-foreground">
+                      To use {mcp.title}, you'll need to obtain an API key from the MCP Marketplace.
+                      Once you have your API key, you can use it to authenticate your requests.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <InfoIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Authentication</h3>
+                    <p className="text-sm text-muted-foreground">
+                      All API requests must include your API key in the Authorization header:
+                    </p>
+                    <CodeBlock language="shell" code="Authorization: Bearer your-api-key" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="code">
+          <Card>
+            <CardHeader>
+              <CardTitle>Code Examples</CardTitle>
+              <CardDescription>
+                Examples of how to use {mcp.title} in different programming languages
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="typescript" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+                  <TabsTrigger value="python">Python</TabsTrigger>
+                  <TabsTrigger value="shell">Shell</TabsTrigger>
+                </TabsList>
+                <TabsContent value="typescript">
+                  <CodeBlock language="typescript" code={mcp.codeExamples.typescript} />
+                </TabsContent>
+                <TabsContent value="python">
+                  <CodeBlock language="python" code={mcp.codeExamples.python} />
+                </TabsContent>
+                <TabsContent value="shell">
+                  <CodeBlock language="shell" code={mcp.codeExamples.shell} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api">
+          <Card>
+            <CardHeader>
+              <CardTitle>API Reference</CardTitle>
+              <CardDescription>
+                Detailed information about the {mcp.title} API endpoints
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {mcp.apiEndpoints.map((endpoint, index) => (
+                  <div key={index} className="border-b pb-4 last:border-b-0">
+                    <h3 className="font-medium mb-2">Endpoint: {endpoint}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Base URL for all API requests
+                    </p>
+                    <div className="bg-muted p-2 rounded-md">
+                      <code className="text-sm">{endpoint}</code>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

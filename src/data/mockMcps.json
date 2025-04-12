@@ -1,0 +1,130 @@
+{
+  "mcps": [
+    {
+      "id": "1",
+      "title": "AI Model Context",
+      "description": "Context management for AI models with advanced prompt engineering. This protocol enables seamless integration of AI models with blockchain data, providing a standardized way to handle model contexts and prompts.",
+      "tags": ["AI", "Web3"],
+      "icon": "🤖",
+      "category": "AI",
+      "usageCount": 1234,
+      "rating": 4.5,
+      "price": 10,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/contexts"],
+      "revenue": 12340,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { MCPClient } from '@mcp/client';\n\nconst client = new MCPClient({\n  apiKey: 'your-api-key'\n});\n\nconst context = await client.createContext({\n  model: 'gpt-4',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000\n  }\n});",
+        "python": "# Example Python implementation\nfrom mcp_client import MCPClient\n\nclient = MCPClient(api_key='your-api-key')\n\ncontext = client.create_context(\n    model='gpt-4',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000\n    }\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"max_tokens\": 1000\n    }\n  }'"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Blockchain Data Protocol",
+      "description": "Standardized protocol for blockchain data access and manipulation. This protocol provides a unified interface for interacting with various blockchain networks.",
+      "tags": ["Blockchain", "DeFi"],
+      "icon": "⛓️",
+      "category": "Blockchain",
+      "usageCount": 2345,
+      "rating": 4.8,
+      "price": 15,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/blockchain"],
+      "revenue": 35175,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { BlockchainClient } from '@mcp/blockchain';\n\nconst client = new BlockchainClient({\n  apiKey: 'your-api-key'\n});\n\nconst data = await client.getBlockData({\n  chain: 'ethereum',\n  blockNumber: 12345678\n});",
+        "python": "# Example Python implementation\nfrom mcp_blockchain import BlockchainClient\n\nclient = BlockchainClient(api_key='your-api-key')\n\ndata = client.get_block_data(\n    chain='ethereum',\n    block_number=12345678\n)",
+        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/blockchain/ethereum/blocks/12345678 \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
+    },
+    {
+      "id": "3",
+      "title": "Smart Contract Integration",
+      "description": "Seamless integration of smart contracts with traditional applications. This protocol provides tools for interacting with smart contracts across multiple blockchain networks.",
+      "tags": ["Smart Contracts", "DeFi"],
+      "icon": "📄",
+      "category": "Smart Contracts",
+      "usageCount": 3456,
+      "rating": 4.7,
+      "price": 20,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/contracts"],
+      "revenue": 69120,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { ContractClient } from '@mcp/contracts';\n\nconst client = new ContractClient({\n  apiKey: 'your-api-key'\n});\n\nconst result = await client.executeContract({\n  address: '0x1234567890123456789012345678901234567890',\n  method: 'transfer',\n  params: ['0x9876543210987654321098765432109876543210', 1000000]\n});",
+        "python": "# Example Python implementation\nfrom mcp_contracts import ContractClient\n\nclient = ContractClient(api_key='your-api-key')\n\nresult = client.execute_contract(\n    address='0x1234567890123456789012345678901234567890',\n    method='transfer',\n    params=['0x9876543210987654321098765432109876543210', 1000000]\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contracts/0x1234567890123456789012345678901234567890/execute \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"method\": \"transfer\",\n    \"params\": [\"0x9876543210987654321098765432109876543210\", 1000000]\n  }'"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Decentralized Storage",
+      "description": "Protocol for decentralized storage solutions. This protocol provides a standardized way to store and retrieve data from various decentralized storage networks.",
+      "tags": ["Storage", "IPFS"],
+      "icon": "💾",
+      "category": "Storage",
+      "usageCount": 4567,
+      "rating": 4.6,
+      "price": 8,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/storage"],
+      "revenue": 36536,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { StorageClient } from '@mcp/storage';\n\nconst client = new StorageClient({\n  apiKey: 'your-api-key'\n});\n\nconst cid = await client.uploadFile({\n  file: fileBuffer,\n  name: 'document.pdf',\n  type: 'application/pdf'\n});",
+        "python": "# Example Python implementation\nfrom mcp_storage import StorageClient\n\nclient = StorageClient(api_key='your-api-key')\n\ncid = client.upload_file(\n    file=file_buffer,\n    name='document.pdf',\n    type='application/pdf'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/storage/upload \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -F \"file=@document.pdf\" \\\n  -F \"name=document.pdf\" \\\n  -F \"type=application/pdf\""
+      }
+    },
+    {
+      "id": "5",
+      "title": "Cross-Chain Bridge",
+      "description": "Protocol for cross-chain asset transfers. This protocol enables seamless transfer of assets between different blockchain networks.",
+      "tags": ["Cross-Chain", "Bridge"],
+      "icon": "🌉",
+      "category": "Cross-Chain",
+      "usageCount": 5678,
+      "rating": 4.4,
+      "price": 12,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/bridge"],
+      "revenue": 68136,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { BridgeClient } from '@mcp/bridge';\n\nconst client = new BridgeClient({\n  apiKey: 'your-api-key'\n});\n\nconst tx = await client.transfer({\n  fromChain: 'ethereum',\n  toChain: 'polygon',\n  token: '0x1234567890123456789012345678901234567890',\n  amount: '1000000000000000000',\n  recipient: '0x9876543210987654321098765432109876543210'\n});",
+        "python": "# Example Python implementation\nfrom mcp_bridge import BridgeClient\n\nclient = BridgeClient(api_key='your-api-key')\n\ntx = client.transfer(\n    from_chain='ethereum',\n    to_chain='polygon',\n    token='0x1234567890123456789012345678901234567890',\n    amount='1000000000000000000',\n    recipient='0x9876543210987654321098765432109876543210'\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/bridge/transfer \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"fromChain\": \"ethereum\",\n    \"toChain\": \"polygon\",\n    \"token\": \"0x1234567890123456789012345678901234567890\",\n    \"amount\": \"1000000000000000000\",\n    \"recipient\": \"0x9876543210987654321098765432109876543210\"\n  }'"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Oracle Integration",
+      "description": "Protocol for integrating oracle services. This protocol provides a standardized way to access off-chain data for smart contracts.",
+      "tags": ["Oracle", "Data"],
+      "icon": "🔮",
+      "category": "Oracle",
+      "usageCount": 6789,
+      "rating": 4.9,
+      "price": 25,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/oracle"],
+      "revenue": 169725,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { OracleClient } from '@mcp/oracle';\n\nconst client = new OracleClient({\n  apiKey: 'your-api-key'\n});\n\nconst price = await client.getPrice({\n  asset: 'ETH',\n  currency: 'USD'\n});",
+        "python": "# Example Python implementation\nfrom mcp_oracle import OracleClient\n\nclient = OracleClient(api_key='your-api-key')\n\nprice = client.get_price(\n    asset='ETH',\n    currency='USD'\n)",
+        "shell": "# Example Shell implementation\ncurl -X GET https://api.mcp.dog/v1/oracle/price/ETH/USD \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
+    }
+  ]
+}
