@@ -7,11 +7,23 @@ export const publicClient = createPublicClient({
   transport: http()
 });
 
-// Create the wallet client
-export const walletClient = createWalletClient({
-  chain: mainnet,
-  transport: custom(window.ethereum)
-});
+// Create wallet client conditionally based on environment
+const createWalletClientSafe = () => {
+  if (typeof window !== 'undefined') {
+    return createWalletClient({
+      chain: mainnet,
+      transport: custom(window.ethereum)
+    });
+  }
+  
+  // Return a mock wallet client for SSR
+  return {
+    writeContract: async () => '0x',
+  } as any;
+};
+
+// Export the wallet client
+export const walletClient = createWalletClientSafe();
 
 // Use the first account from the wallet
 export const account = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'; // Replace with actual account when connecting wallet
