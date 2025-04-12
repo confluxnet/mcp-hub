@@ -293,24 +293,50 @@ export default function DaoGovernance() {
 
       // Call the appropriate contract function
       const tx = await poolToUse[functionName](mcpId);
+
+      // 트랜잭션 진행 중 로딩 표시
+      toast({
+        title: "Transaction in Progress",
+        description: `Please wait while your ${
+          approve ? "approval" : "rejection"
+        } is being processed...`,
+      });
+
+      // 트랜잭션 완료 대기
       await tx.wait();
 
       // Reset form
       setSelectedMcp(null);
       setApprovalReason("");
 
-      // Reload MCPs
-      await loadMcps();
+      // 승인된 MCP를 목록에서 제거
+      if (approve) {
+        setMcps((prevMcps) => prevMcps.filter((mcp) => mcp.id !== mcpId));
+        setPendingMcps((prevMcps) => prevMcps.filter((mcp) => mcp.id !== mcpId));
+      }
 
       toast({
         title: "Success",
         description: `MCP ${approve ? "approved" : "rejected"} successfully.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error making MCP decision:", error);
+
+      // 오류 메시지 개선
+      let errorMessage = "Failed to make decision. Please try again.";
+
+      if (error.message) {
+        if (error.message.includes("missing role") || error.message.includes("revert")) {
+          errorMessage =
+            "You don't have permission to approve/reject MCPs. Only admins can perform this action.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
         title: "Error",
-        description: "Failed to make decision. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
