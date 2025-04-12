@@ -1,0 +1,72 @@
+{
+  "mcps": [
+    {
+      "id": "1",
+      "title": "AI Model Context",
+      "description": "Context management for AI models with advanced prompt engineering. This protocol enables seamless integration of AI models with blockchain data, providing a standardized way to handle model contexts and prompts.",
+      "tags": ["AI", "Web3"],
+      "icon": "🤖",
+      "category": "AI",
+      "usageCount": 1234,
+      "rating": 4.5,
+      "price": 10,
+      "owner": "0x1234567890123456789012345678901234567890",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/contexts"],
+      "revenue": 12340,
+
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { MCPClient } from '@mcp/client';\n\nconst client = new MCPClient({\n  apiKey: 'your-api-key'\n});\n\nconst context = await client.createContext({\n  model: 'gpt-4',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000\n  }\n});",
+        "python": "# Example Python implementation\nfrom mcp_client import MCPClient\n\nclient = MCPClient(api_key='your-api-key')\n\ncontext = client.create_context(\n    model='gpt-4',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000\n    }\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/contexts \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\": \"gpt-4\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"max_tokens\": 1000\n    }\n  }'"
+      },
+      "openApiJson": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "AI Model Context",
+          "version": "1.0.0",
+          "description": "API for managing AI model contexts"
+        },
+        "servers": [
+          {
+            "url": "https://api.mcp.dog/v1",
+            "description": "Production API"
+          }
+        ],
+        "paths": {
+          "/contexts": {
+            "post": {
+              "summary": "Create a new context",
+              "description": "Creates a new context for an AI model",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "model": {
+                          "type": "string",
+                          "description": "The AI model to use"
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "properties": {
+                            "temperature": {
+                              "type": "number",
+                              "description": "The temperature for the AI model"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

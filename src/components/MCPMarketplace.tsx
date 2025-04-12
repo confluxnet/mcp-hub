@@ -636,7 +636,7 @@ export default function MCPMarketplace() {
 
     try {
       setLoading(true);
-      const tx = await mcpPool.submitMcp(
+      const tx = await mcpPool.registerMCP(
         newMcp.title,
         newMcp.description,
         newMcp.category,

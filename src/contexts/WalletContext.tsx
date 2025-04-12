@@ -165,8 +165,11 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       );
 
       // Get token balance
+      console.log("[DEBUG] account", account);
       const balance = await sagaTokenContract.balanceOf(account);
+      console.log(balance);
       const formattedBalance = ethers.formatEther(balance);
+      console.log("[DEBUG] formattedBalance", formattedBalance);
 
       // Update state
       setWalletState({

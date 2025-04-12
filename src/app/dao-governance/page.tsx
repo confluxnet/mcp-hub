@@ -145,6 +145,7 @@ export default function DaoGovernance() {
       // This is a placeholder - you'll need to implement the actual contract call
       try {
         const mcpsData = await mcpPool.getMcps();
+        console.log(mcpsData);
 
         const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
           id: mcp.id,
@@ -684,7 +685,7 @@ export default function DaoGovernance() {
                 <CardContent>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Voting Power</span>
-                    <span className="text-2xl font-bold">{votingPower} SAGA</span>
+                    <span className="text-2xl font-bold">{votingPower} NEX</span>
                   </div>
                 </CardContent>
               </Card>

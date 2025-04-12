@@ -29,8 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
+import { submitMcp, getMcps, MCP as ImportedMCPType } from "@/lib/api";
 
 // Import contract ABIs
 import SagaTokenABI from "../../contracts/SagaToken.json";
@@ -71,11 +72,14 @@ interface MCP {
   description: string;
   price: number;
   apiEndpoints: string[];
-  codeExamples: {
-    typescript: string;
-    python: string;
-    shell: string;
+  codeExamples?: {
+    typescript?: string;
+    python?: string;
+    shell?: string;
   };
+  isFromFirestore?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   tags?: string[];
   icon?: string;
   category?: string;
@@ -96,6 +100,57 @@ declare global {
   }
 }
 
+// MCP Type for Firestore
+interface MCPType {
+  title: string;
+  description: string;
+  price: number;
+  apiEndpoints: string[];
+  codeExamples?: {
+    typescript?: string;
+    python?: string;
+    shell?: string;
+  };
+  apiParams?: {
+    method: string;
+    path: string;
+    pathParams: { key: string; type: string; required: boolean }[];
+    queryParams: { key: string; type: string; required: boolean }[];
+    bodyParams: { key: string; type: string; required: boolean }[];
+  };
+  owner?: string;
+}
+
+// Firestore API functions
+const submitMcpToFirestore = async (mcpData: MCPType) => {
+  try {
+    const response = await fetch("/api/mcps", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(mcpData),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error submitting MCP:", error);
+    return { success: false, error: "Failed to submit MCP" };
+  }
+};
+
+const getMcpsFromFirestore = async () => {
+  try {
+    const response = await fetch("/api/mcps");
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error fetching MCPs:", error);
+    return { success: false, error: "Failed to fetch MCPs" };
+  }
+};
+
 export default function ProvideMcps() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -103,7 +158,22 @@ export default function ProvideMcps() {
   const [loading, setLoading] = useState<boolean>(false);
   const [useCase, setUseCase] = useState<string>("");
   const [recommendedMcps, setRecommendedMcps] = useState<MCP[]>([]);
-  const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
+  const [selectedMcp, setSelectedMcp] = useState<MCP>({
+    id: "",
+    title: "",
+    description: "",
+    price: 0,
+    apiEndpoints: [],
+    codeExamples: {},
+    tags: [],
+    icon: "",
+    category: "",
+    usageCount: 0,
+    owner: "",
+    approved: false,
+    active: false,
+    revenue: 0,
+  });
   const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [usageStats, setUsageStats] = useState<{ total: number; today: number }>({
     total: 0,
@@ -145,53 +215,30 @@ export default function ProvideMcps() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load MCPs from the contract
+  // Load MCPs from the contract and Firestore
   const loadMcps = async () => {
     if (!mcpPool) return;
 
     try {
       setLoading(true);
-      // This is a placeholder - you'll need to implement the actual contract call
-      try {
-        const mcpsData = await mcpPool.getMcps();
+      // Get MCPs from the contract
+      const mcpsData = await mcpPool.getMCP(0); // Get the first MCP
+      console.log("Contract MCPs:", mcpsData);
 
-        const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
-          id: mcp.id,
-          title: mcp.title,
-          description: mcp.description,
-          tags: mcp.tags || [],
-          icon: mcp.icon,
-          category: mcp.category,
-          usageCount: mcp.usageCount.toNumber(),
-          rating: mcp.rating,
-          price: parseFloat(ethers.formatEther(mcp.price)),
-          owner: mcp.owner,
-          approved: mcp.approved,
-          active: mcp.active,
-          apiEndpoints: mcp.apiEndpoints || [],
-          revenue: parseFloat(ethers.formatEther(mcp.revenue)),
-          codeExamples: mcp.codeExamples,
-        }));
+      // Get MCPs from Firestore
+      const firestoreResult = await getMcpsFromFirestore();
+      console.log("Firestore MCPs:", firestoreResult);
 
-        setMcps(formattedMcps);
-      } catch (mcpError) {
-        console.error("Error loading MCPs from contract:", mcpError);
-        // Set empty array if there's an error
-        setMcps([]);
-        toast({
-          title: "Warning",
-          description:
-            "Could not load MCPs. The contract might not be deployed or the address might be incorrect.",
-          variant: "destructive",
-        });
+      if (firestoreResult.success && firestoreResult.mcps) {
+        setMcps(firestoreResult.mcps);
       }
     } catch (error) {
-      console.error("Error loading MCPs:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load MCPs. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error loading MCPs from contract:", error);
+      // If contract call fails, try to load from Firestore only
+      const firestoreResult = await getMcpsFromFirestore();
+      if (firestoreResult.success && firestoreResult.mcps) {
+        setMcps(firestoreResult.mcps);
+      }
     } finally {
       setLoading(false);
     }
@@ -224,17 +271,61 @@ export default function ProvideMcps() {
       const priceInWei = ethers.parseEther(selectedMcp.price.toString());
 
       // Submit MCP to the contract
-      const tx = await mcpPool.submitMcp(
+      const tx = await mcpPool.registerMCP(
         selectedMcp.title,
         selectedMcp.description,
-        priceInWei,
-        selectedMcp.apiEndpoints,
-        selectedMcp.codeExamples
+        selectedMcp.apiEndpoints[0] || "", // Use the first endpoint or empty string
+        JSON.stringify(selectedMcp.codeExamples || {}), // Convert code examples to string
+        priceInWei
       );
       await tx.wait();
 
+      // Firestore에 MCP 데이터 저장
+      const mcpData: MCPType = {
+        title: selectedMcp.title,
+        description: selectedMcp.description,
+        price: selectedMcp.price,
+        apiEndpoints: selectedMcp.apiEndpoints,
+        codeExamples: selectedMcp.codeExamples,
+        apiParams: apiParams,
+        owner: account || "anonymous",
+      };
+
+      const result = await submitMcpToFirestore(mcpData);
+
+      if (!result.success) {
+        console.error("Failed to save MCP to Firestore:", result.error);
+        toast({
+          title: "Warning",
+          description: "MCP submitted to blockchain but failed to save to database",
+          variant: "destructive",
+        });
+      }
+
       // Reset form
-      setSelectedMcp(null);
+      setSelectedMcp({
+        id: "",
+        title: "",
+        description: "",
+        price: 0,
+        apiEndpoints: [],
+        codeExamples: {},
+        tags: [],
+        icon: "",
+        category: "",
+        usageCount: 0,
+        owner: "",
+        approved: false,
+        active: false,
+        revenue: 0,
+      });
+      setApiParams({
+        method: "GET",
+        path: "",
+        pathParams: [],
+        queryParams: [],
+        bodyParams: [],
+      });
 
       // Reload MCPs
       await loadMcps();
@@ -495,6 +586,10 @@ export default function ProvideMcps() {
     );
   }
 
+  useEffect(() => {
+    loadMcps();
+  }, []);
+
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
@@ -534,7 +629,7 @@ export default function ProvideMcps() {
                     <Input
                       id="title"
                       placeholder="Enter MCP title"
-                      value={selectedMcp?.title || ""}
+                      value={selectedMcp.title}
                       onChange={handleTitleChange}
                     />
                   </div>
@@ -546,7 +641,7 @@ export default function ProvideMcps() {
                     <Textarea
                       id="description"
                       placeholder="Enter MCP description"
-                      value={selectedMcp?.description || ""}
+                      value={selectedMcp.description}
                       onChange={handleDescriptionChange}
                     />
                   </div>
@@ -559,7 +654,7 @@ export default function ProvideMcps() {
                       id="price"
                       type="number"
                       placeholder="Enter MCP price"
-                      value={selectedMcp?.price || ""}
+                      value={selectedMcp.price}
                       onChange={handlePriceChange}
                     />
                   </div>
@@ -571,7 +666,7 @@ export default function ProvideMcps() {
                     <Input
                       id="apiEndpoints"
                       placeholder="Enter API endpoint"
-                      value={selectedMcp?.apiEndpoints?.join(", ") || ""}
+                      value={selectedMcp.apiEndpoints.join(", ")}
                       onChange={handleApiEndpointsChange}
                     />
                   </div>
@@ -702,9 +797,8 @@ export default function ProvideMcps() {
                               </Select>
                               <div className="flex items-center space-x-1">
                                 <Checkbox
-                                  id={`query-required-${index}`}
                                   checked={param.required}
-                                  onCheckedChange={(checked) =>
+                                  onChange={(checked) =>
                                     updateParameter("query", index, "required", checked)
                                   }
                                 />
@@ -759,9 +853,8 @@ export default function ProvideMcps() {
                               </Select>
                               <div className="flex items-center space-x-1">
                                 <Checkbox
-                                  id={`body-required-${index}`}
                                   checked={param.required}
-                                  onCheckedChange={(checked) =>
+                                  onChange={(checked) =>
                                     updateParameter("body", index, "required", checked)
                                   }
                                 />
