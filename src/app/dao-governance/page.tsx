@@ -238,8 +238,21 @@ export default function DaoGovernance() {
     try {
       setLoading(true);
 
-      // Submit decision to the contract
-      const tx = await mcpPool.decideMcp(mcpId, approve, approvalReason);
+      // Log contract interface to check available functions
+      console.log("Contract interface:", mcpPool.interface);
+
+      // Check if the contract has the required function
+      const functionName = approve ? "approveMCP" : "rejectMCP";
+      const functionFragment = mcpPool.interface.getFunction(functionName);
+
+      if (!functionFragment) {
+        throw new Error(`Contract does not have ${functionName} function`);
+      }
+
+      console.log(`${functionName} function fragment:`, functionFragment);
+
+      // Call the appropriate contract function
+      const tx = await mcpPool[functionName](mcpId);
       await tx.wait();
 
       // Reset form
