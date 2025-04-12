@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, Filter } from "lucide-react";
+import { useWallet } from "@/hooks/useWallet";
 
 // Import contract ABIs
 import SagaTokenABI from "../contracts/SagaToken.json";
@@ -90,11 +91,6 @@ const mockMcps = mockMcpsData.mcps;
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [account, setAccount] = useState<string>("");
-  const [sagaToken, setSagaToken] = useState<ethers.Contract | null>(null);
-  const [mcpPool, setMcpPool] = useState<ethers.Contract | null>(null);
-  const [sagaDao, setSagaDao] = useState<ethers.Contract | null>(null);
-  const [billingSystem, setBillingSystem] = useState<ethers.Contract | null>(null);
   const [mcps, setMcps] = useState<MCP[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [useCase, setUseCase] = useState<string>("");
@@ -106,8 +102,11 @@ export default function Home() {
     total: 0,
     today: 0,
   });
-  const [balance, setBalance] = useState("0");
   const { toast } = useToast();
+
+  // Use the useWallet hook
+  const { walletState } = useWallet();
+  const { account, sagaToken, mcpPool, billingSystem } = walletState;
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -124,120 +123,6 @@ export default function Home() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Connect wallet and initialize contracts
-  const connectWallet = async () => {
-    try {
-      if (!window.ethereum) {
-        toast({
-          title: "Error",
-          description: "Please install MetaMask to use this feature",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const ethereum = window.ethereum as unknown as MetaMaskProvider;
-
-      if (ethereum?.isMetaMask) {
-        const accounts = (await ethereum.request({
-          method: "eth_requestAccounts",
-        })) as string[];
-
-        // Check if we're on the correct network
-        const provider = new ethers.BrowserProvider(ethereum);
-        const network = await provider.getNetwork();
-        const currentChainId = network.chainId.toString(16);
-
-        if (currentChainId !== SAGA_CHAINLET_CONFIG.chainId.replace("0x", "")) {
-          try {
-            // Try to switch to the Saga network
-            await ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: SAGA_CHAINLET_CONFIG.chainId }],
-            });
-          } catch (switchError: any) {
-            // This error code indicates that the chain has not been added to MetaMask
-            if (switchError.code === 4902) {
-              try {
-                await ethereum.request({
-                  method: "wallet_addEthereumChain",
-                  params: [
-                    {
-                      chainId: SAGA_CHAINLET_CONFIG.chainId,
-                      chainName: SAGA_CHAINLET_CONFIG.chainName,
-                      nativeCurrency: SAGA_CHAINLET_CONFIG.nativeCurrency,
-                      rpcUrls: SAGA_CHAINLET_CONFIG.rpcUrls,
-                      blockExplorerUrls: SAGA_CHAINLET_CONFIG.blockExplorerUrls,
-                    },
-                  ],
-                });
-              } catch (error) {
-                toast({
-                  title: "Error",
-                  description: "Failed to add Saga network to MetaMask",
-                  variant: "destructive",
-                });
-                return;
-              }
-            } else {
-              toast({
-                title: "Error",
-                description: "Failed to switch to Saga network",
-                variant: "destructive",
-              });
-              return;
-            }
-          }
-        }
-
-        // Get the updated provider and signer after network switch
-        const updatedProvider = new ethers.BrowserProvider(ethereum);
-        const signer = await updatedProvider.getSigner();
-        setAccount(accounts[0]);
-
-        // Initialize contract instances
-        const sagaTokenContract = new ethers.Contract(SAGA_TOKEN_ADDRESS, SagaTokenABI.abi, signer);
-        const mcpPoolContract = new ethers.Contract(MCP_POOL_ADDRESS, MCPPoolABI.abi, signer);
-        const sagaDaoContract = new ethers.Contract(SAGA_DAO_ADDRESS, SagaDAOABI.abi, signer);
-        const billingSystemContract = new ethers.Contract(
-          BILLING_SYSTEM_ADDRESS,
-          BillingSystemABI.abi,
-          signer
-        );
-
-        setSagaToken(sagaTokenContract);
-        setMcpPool(mcpPoolContract);
-        setSagaDao(sagaDaoContract);
-        setBillingSystem(billingSystemContract);
-
-        // Get token balance
-        try {
-          const balance = await sagaTokenContract.balanceOf(accounts[0]);
-          setBalance(ethers.formatEther(balance));
-        } catch (balanceError) {
-          console.error("Error getting token balance:", balanceError);
-          setBalance("0");
-        }
-
-        // Load MCPs
-        await loadMcps();
-      } else {
-        toast({
-          title: "MetaMask Required",
-          description: "Please install MetaMask to use this application",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect wallet",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Load MCPs from the contract
   const loadMcps = async () => {
@@ -386,21 +271,6 @@ export default function Home() {
     }
   };
 
-  // Add disconnect wallet function
-  const disconnectWallet = () => {
-    setAccount("");
-    setBalance("0");
-    setSagaToken(null);
-    setMcpPool(null);
-    setSagaDao(null);
-    setBillingSystem(null);
-    setMcps([]);
-    toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -413,13 +283,7 @@ export default function Home() {
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (

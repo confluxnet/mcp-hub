@@ -1,25 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { BarChart2, Package, Users, Wallet } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useWallet } from "@/hooks/useWallet";
 
 interface AsideProps {
   isSidebarOpen: boolean;
-  account: string;
-  balance: string;
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
 }
 
-export function Aside({
-  isSidebarOpen,
-  account,
-  balance,
-  connectWallet,
-  disconnectWallet,
-}: AsideProps) {
-  const router = useRouter();
+export function Aside({ isSidebarOpen }: AsideProps) {
   const pathname = usePathname();
+  const { walletState, connectWallet, disconnectWallet } = useWallet();
+  const { account, balance } = walletState;
 
   const menuItems = [
     {
@@ -100,7 +92,10 @@ export function Aside({
             </Button>
           </>
         ) : (
-          <Button className="w-full flex items-center justify-center" onClick={connectWallet}>
+          <Button
+            className="w-full flex items-center justify-center"
+            onClick={() => connectWallet()}
+          >
             <Wallet className="w-4 h-4 mr-2" />
             Connect Wallet
           </Button>

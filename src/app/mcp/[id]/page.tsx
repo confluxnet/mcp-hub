@@ -29,9 +29,6 @@ const getMcpData = (id: string) => {
 export default function McpPage({ params }: { params: { id: string } }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [account, setAccount] = useState("");
-  const [balance, setBalance] = useState("0");
 
   const mcp = getMcpData(params.id);
 
@@ -55,27 +52,11 @@ export default function McpPage({ params }: { params: { id: string } }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const connectWallet = async () => {
-    // Implement wallet connection logic here
-    console.log("Connecting wallet...");
-  };
-
-  const disconnectWallet = () => {
-    // Implement wallet disconnection logic here
-    console.log("Disconnecting wallet...");
-  };
-
   return (
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (

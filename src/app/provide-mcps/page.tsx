@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import type { Eip1193Provider } from "ethers";
+import Link from "next/link";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
 import {
@@ -19,12 +20,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter } from "lucide-react";
+import { useWallet } from "@/hooks/useWallet";
 
 // Import contract ABIs
 import SagaTokenABI from "../../contracts/SagaToken.json";
 import MCPPoolABI from "../../contracts/MCPPool.json";
 import SagaDAOABI from "../../contracts/SagaDAO.json";
 import BillingSystemABI from "../../contracts/BillingSystem.json";
+
+// Import mock data
+import mockMcpsData from "@/data/mockMcps.json";
 
 // Contract addresses from environment variables
 const SAGA_TOKEN_ADDRESS =
@@ -49,26 +55,26 @@ const SAGA_CHAINLET_CONFIG = {
   blockExplorerUrls: ["https://confluxnet-2744423445533000-1.sagaexplorer.io"],
 };
 
+// Define the MCP interface
 interface MCP {
   id: string;
   title: string;
   description: string;
-  tags: string[];
-  icon: string;
-  category: string;
-  usageCount: number;
-  rating: number;
   price: number;
-  owner: string;
-  approved: boolean;
-  active: boolean;
   apiEndpoints: string[];
-  revenue: number;
-  codeExamples?: {
+  codeExamples: {
     typescript: string;
     python: string;
     shell: string;
   };
+  tags?: string[];
+  icon?: string;
+  category?: string;
+  usageCount?: number;
+  owner?: string;
+  approved?: boolean;
+  active?: boolean;
+  revenue?: number;
 }
 
 interface MetaMaskProvider extends Eip1193Provider {
@@ -84,27 +90,22 @@ declare global {
 export default function ProvideMcps() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [account, setAccount] = useState<string>("");
-  const [sagaToken, setSagaToken] = useState<ethers.Contract | null>(null);
-  const [mcpPool, setMcpPool] = useState<ethers.Contract | null>(null);
-  const [sagaDao, setSagaDao] = useState<ethers.Contract | null>(null);
-  const [billingSystem, setBillingSystem] = useState<ethers.Contract | null>(null);
   const [mcps, setMcps] = useState<MCP[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [balance, setBalance] = useState("0");
-  const [earnings, setEarnings] = useState("0");
-  const [newMcp, setNewMcp] = useState({
-    title: "",
-    description: "",
-    price: "",
-    apiEndpoints: "",
-    codeExamples: {
-      typescript: "",
-      python: "",
-      shell: "",
-    },
+  const [useCase, setUseCase] = useState<string>("");
+  const [recommendedMcps, setRecommendedMcps] = useState<MCP[]>([]);
+  const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
+  const [apiResponse, setApiResponse] = useState<string>("");
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const [usageStats, setUsageStats] = useState<{ total: number; today: number }>({
+    total: 0,
+    today: 0,
   });
   const { toast } = useToast();
+
+  // Use the useWallet hook
+  const { walletState, connectWallet } = useWallet();
+  const { account, balance, mcpPool } = walletState;
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -121,120 +122,6 @@ export default function ProvideMcps() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Connect wallet and initialize contracts
-  const connectWallet = async () => {
-    try {
-      if (!window.ethereum) {
-        toast({
-          title: "Error",
-          description: "Please install MetaMask to use this feature",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const ethereum = window.ethereum as unknown as MetaMaskProvider;
-
-      if (ethereum?.isMetaMask) {
-        const accounts = (await ethereum.request({
-          method: "eth_requestAccounts",
-        })) as string[];
-
-        // Check if we're on the correct network
-        const provider = new ethers.BrowserProvider(ethereum);
-        const network = await provider.getNetwork();
-        const currentChainId = network.chainId.toString(16);
-
-        if (currentChainId !== SAGA_CHAINLET_CONFIG.chainId.replace("0x", "")) {
-          try {
-            // Try to switch to the Saga network
-            await ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: SAGA_CHAINLET_CONFIG.chainId }],
-            });
-          } catch (switchError: any) {
-            // This error code indicates that the chain has not been added to MetaMask
-            if (switchError.code === 4902) {
-              try {
-                await ethereum.request({
-                  method: "wallet_addEthereumChain",
-                  params: [
-                    {
-                      chainId: SAGA_CHAINLET_CONFIG.chainId,
-                      chainName: SAGA_CHAINLET_CONFIG.chainName,
-                      nativeCurrency: SAGA_CHAINLET_CONFIG.nativeCurrency,
-                      rpcUrls: SAGA_CHAINLET_CONFIG.rpcUrls,
-                      blockExplorerUrls: SAGA_CHAINLET_CONFIG.blockExplorerUrls,
-                    },
-                  ],
-                });
-              } catch (error) {
-                toast({
-                  title: "Error",
-                  description: "Failed to add Saga network to MetaMask",
-                  variant: "destructive",
-                });
-                return;
-              }
-            } else {
-              toast({
-                title: "Error",
-                description: "Failed to switch to Saga network",
-                variant: "destructive",
-              });
-              return;
-            }
-          }
-        }
-
-        // Get the updated provider and signer after network switch
-        const updatedProvider = new ethers.BrowserProvider(ethereum);
-        const signer = await updatedProvider.getSigner();
-        setAccount(accounts[0]);
-
-        // Initialize contract instances
-        const sagaTokenContract = new ethers.Contract(SAGA_TOKEN_ADDRESS, SagaTokenABI.abi, signer);
-        const mcpPoolContract = new ethers.Contract(MCP_POOL_ADDRESS, MCPPoolABI.abi, signer);
-        const sagaDaoContract = new ethers.Contract(SAGA_DAO_ADDRESS, SagaDAOABI.abi, signer);
-        const billingSystemContract = new ethers.Contract(
-          BILLING_SYSTEM_ADDRESS,
-          BillingSystemABI.abi,
-          signer
-        );
-
-        setSagaToken(sagaTokenContract);
-        setMcpPool(mcpPoolContract);
-        setSagaDao(sagaDaoContract);
-        setBillingSystem(billingSystemContract);
-
-        // Get token balance
-        try {
-          const balance = await sagaTokenContract.balanceOf(accounts[0]);
-          setBalance(ethers.formatEther(balance));
-        } catch (balanceError) {
-          console.error("Error getting token balance:", balanceError);
-          setBalance("0");
-        }
-
-        // Load MCPs
-        await loadMcps();
-      } else {
-        toast({
-          title: "MetaMask Required",
-          description: "Please install MetaMask to use this application",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect wallet",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Load MCPs from the contract
   const loadMcps = async () => {
@@ -296,7 +183,13 @@ export default function ProvideMcps() {
       setLoading(true);
 
       // Validate input
-      if (!newMcp.title || !newMcp.description || !newMcp.price || !newMcp.apiEndpoints) {
+      if (
+        !selectedMcp ||
+        !selectedMcp.title ||
+        !selectedMcp.description ||
+        !selectedMcp.price ||
+        !selectedMcp.apiEndpoints
+      ) {
         toast({
           title: "Error",
           description: "Please fill in all required fields",
@@ -306,30 +199,20 @@ export default function ProvideMcps() {
       }
 
       // Convert price to Wei
-      const priceInWei = ethers.parseEther(newMcp.price);
+      const priceInWei = ethers.parseEther(selectedMcp.price.toString());
 
       // Submit MCP to the contract
       const tx = await mcpPool.submitMcp(
-        newMcp.title,
-        newMcp.description,
+        selectedMcp.title,
+        selectedMcp.description,
         priceInWei,
-        newMcp.apiEndpoints.split(",").map((endpoint) => endpoint.trim()),
-        newMcp.codeExamples
+        selectedMcp.apiEndpoints,
+        selectedMcp.codeExamples
       );
       await tx.wait();
 
       // Reset form
-      setNewMcp({
-        title: "",
-        description: "",
-        price: "",
-        apiEndpoints: "",
-        codeExamples: {
-          typescript: "",
-          python: "",
-          shell: "",
-        },
-      });
+      setSelectedMcp(null);
 
       // Reload MCPs
       await loadMcps();
@@ -350,19 +233,59 @@ export default function ProvideMcps() {
     }
   };
 
-  // Add disconnect wallet function
-  const disconnectWallet = () => {
-    setAccount("");
-    setBalance("0");
-    setSagaToken(null);
-    setMcpPool(null);
-    setSagaDao(null);
-    setBillingSystem(null);
-    setMcps([]);
-    toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected",
-    });
+  // Fix the API endpoints handling
+  const handleApiEndpointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedMcp) {
+      // Get the input value as a string
+      const inputValue = e.target.value as string;
+      // Convert the input string to an array of strings
+      const endpoints = inputValue ? inputValue.split(",").map((endpoint) => endpoint.trim()) : [];
+      setSelectedMcp({
+        ...selectedMcp,
+        apiEndpoints: endpoints,
+      });
+    }
+  };
+
+  // Fix the code examples handling
+  const handleCodeExampleChange = (language: "typescript" | "python" | "shell", value: string) => {
+    if (selectedMcp) {
+      setSelectedMcp({
+        ...selectedMcp,
+        codeExamples: {
+          ...selectedMcp.codeExamples,
+          [language]: value,
+        },
+      });
+    }
+  };
+
+  // Fix the form field handlers
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedMcp) {
+      setSelectedMcp({
+        ...selectedMcp,
+        title: e.target.value,
+      });
+    }
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (selectedMcp) {
+      setSelectedMcp({
+        ...selectedMcp,
+        description: e.target.value,
+      });
+    }
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedMcp) {
+      setSelectedMcp({
+        ...selectedMcp,
+        price: parseFloat(e.target.value),
+      });
+    }
   };
 
   if (loading) {
@@ -377,13 +300,7 @@ export default function ProvideMcps() {
     <div className="relative">
       <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
-      <Aside
-        isSidebarOpen={isSidebarOpen}
-        account={account}
-        balance={balance}
-        connectWallet={connectWallet}
-        disconnectWallet={disconnectWallet}
-      />
+      <Aside isSidebarOpen={isSidebarOpen} />
 
       {/* Overlay for mobile */}
       {isMobile && isSidebarOpen && (
@@ -418,8 +335,8 @@ export default function ProvideMcps() {
                     <Input
                       id="title"
                       placeholder="Enter MCP title"
-                      value={newMcp.title}
-                      onChange={(e) => setNewMcp({ ...newMcp, title: e.target.value })}
+                      value={selectedMcp?.title || ""}
+                      onChange={handleTitleChange}
                     />
                   </div>
 
@@ -430,8 +347,8 @@ export default function ProvideMcps() {
                     <Textarea
                       id="description"
                       placeholder="Enter MCP description"
-                      value={newMcp.description}
-                      onChange={(e) => setNewMcp({ ...newMcp, description: e.target.value })}
+                      value={selectedMcp?.description || ""}
+                      onChange={handleDescriptionChange}
                     />
                   </div>
 
@@ -442,9 +359,9 @@ export default function ProvideMcps() {
                     <Input
                       id="price"
                       type="number"
-                      placeholder="Enter price in SAGA tokens"
-                      value={newMcp.price}
-                      onChange={(e) => setNewMcp({ ...newMcp, price: e.target.value })}
+                      placeholder="Enter MCP price"
+                      value={selectedMcp?.price || ""}
+                      onChange={handlePriceChange}
                     />
                   </div>
 
@@ -455,8 +372,8 @@ export default function ProvideMcps() {
                     <Input
                       id="apiEndpoints"
                       placeholder="Enter API endpoints"
-                      value={newMcp.apiEndpoints}
-                      onChange={(e) => setNewMcp({ ...newMcp, apiEndpoints: e.target.value })}
+                      value={selectedMcp?.apiEndpoints?.join(", ") || ""}
+                      onChange={handleApiEndpointsChange}
                     />
                   </div>
 
@@ -472,16 +389,8 @@ export default function ProvideMcps() {
                         <Textarea
                           id="typescript"
                           placeholder="Enter TypeScript example"
-                          value={newMcp.codeExamples.typescript}
-                          onChange={(e) =>
-                            setNewMcp({
-                              ...newMcp,
-                              codeExamples: {
-                                ...newMcp.codeExamples,
-                                typescript: e.target.value,
-                              },
-                            })
-                          }
+                          value={selectedMcp?.codeExamples?.typescript || ""}
+                          onChange={(e) => handleCodeExampleChange("typescript", e.target.value)}
                         />
                       </div>
                       <div>
@@ -491,16 +400,8 @@ export default function ProvideMcps() {
                         <Textarea
                           id="python"
                           placeholder="Enter Python example"
-                          value={newMcp.codeExamples.python}
-                          onChange={(e) =>
-                            setNewMcp({
-                              ...newMcp,
-                              codeExamples: {
-                                ...newMcp.codeExamples,
-                                python: e.target.value,
-                              },
-                            })
-                          }
+                          value={selectedMcp?.codeExamples?.python || ""}
+                          onChange={(e) => handleCodeExampleChange("python", e.target.value)}
                         />
                       </div>
                       <div>
@@ -510,16 +411,8 @@ export default function ProvideMcps() {
                         <Textarea
                           id="shell"
                           placeholder="Enter Shell example"
-                          value={newMcp.codeExamples.shell}
-                          onChange={(e) =>
-                            setNewMcp({
-                              ...newMcp,
-                              codeExamples: {
-                                ...newMcp.codeExamples,
-                                shell: e.target.value,
-                              },
-                            })
-                          }
+                          value={selectedMcp?.codeExamples?.shell || ""}
+                          onChange={(e) => handleCodeExampleChange("shell", e.target.value)}
                         />
                       </div>
                     </div>
@@ -583,11 +476,11 @@ export default function ProvideMcps() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Total Earnings</span>
-                        <span className="text-2xl font-bold">{earnings} SAGA</span>
+                        <span className="text-2xl font-bold">{balance} SAGA</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Available Balance</span>
-                        <span className="text-2xl font-bold">{balance} SAGA</span>
+                        <span className="text-2xl font-bold">{tokenBalance} SAGA</span>
                       </div>
                     </div>
                   </CardContent>
