@@ -175,7 +175,7 @@ export default function PurchasePage({ params }: { params: { id: string } }) {
                 <p className="text-sm text-muted-foreground">{licenseId}</p>
               </div>
               <div>
-                <p className="text-sm font-medium mb-1">What's Next?</p>
+                <p className="text-sm font-medium mb-1">What&apos;s Next?</p>
                 <p className="text-sm text-muted-foreground">
                   You can now use this recipe in your projects. The license entitles you to use
                   all the MCPs included in this recipe according to the license terms.
@@ -196,7 +196,7 @@ export default function PurchasePage({ params }: { params: { id: string } }) {
           <CardHeader>
             <CardTitle>Confirm Purchase</CardTitle>
             <CardDescription>
-              You're about to purchase a license for this recipe
+              You&apos;re about to purchase a license for this recipe
             </CardDescription>
           </CardHeader>
           <CardContent>

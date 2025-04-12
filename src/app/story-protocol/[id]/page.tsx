@@ -262,7 +262,7 @@ export default function BundlePage({ params }: { params: { id: string } }) {
                       <div>
                         <h3 className="font-medium">Requirements</h3>
                         <p className="text-sm text-muted-foreground">
-                          To use this bundle, you'll need:
+                          To use this bundle, you&apos;ll need:
                         </p>
                         <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
                           <li>A wallet with ETH (for transaction fees)</li>

@@ -306,7 +306,7 @@ export default function ProvideMcps() {
       }
 
       // Convert price to Wei
-      const priceInWei = ethers.parseEther(newMcp.price);
+      const priceInWei = ethers.utils.parseEther(newMcp.price);
 
       // Submit MCP to the contract
       const tx = await mcpPool.submitMcp(

@@ -419,6 +419,48 @@
         "python": "# Example Python implementation\nfrom mcp_collaboration import CollaborationClient\n\nclient = CollaborationClient(api_key='your-api-key')\n\nworkflow = client.create_workflow(\n    task_description='Analyze the market impact of recent Fed policy changes',\n    agents=[\n        {'id': 'agent-123', 'role': 'data-gatherer', 'specialization': 'financial-news'},\n        {'id': 'agent-456', 'role': 'analyst', 'specialization': 'economic-trends'},\n        {'id': 'agent-789', 'role': 'predictor', 'specialization': 'market-forecasting'},\n        {'id': 'agent-012', 'role': 'reporter', 'specialization': 'content-creation'}\n    ],\n    workflow_pattern='sequential',\n    output_format='comprehensive-report',\n    max_execution_time=300\n)",
         "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/agent-collaboration/workflow \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"taskDescription\": \"Analyze the market impact of recent Fed policy changes\",\n    \"agents\": [\n      {\"id\": \"agent-123\", \"role\": \"data-gatherer\", \"specialization\": \"financial-news\"},\n      {\"id\": \"agent-456\", \"role\": \"analyst\", \"specialization\": \"economic-trends\"},\n      {\"id\": \"agent-789\", \"role\": \"predictor\", \"specialization\": \"market-forecasting\"},\n      {\"id\": \"agent-012\", \"role\": \"reporter\", \"specialization\": \"content-creation\"}\n    ],\n    \"workflowPattern\": \"sequential\",\n    \"outputFormat\": \"comprehensive-report\",\n    \"maxExecutionTime\": 300\n  }'"
       }
+    },
+    {
+      "id": "21",
+      "title": "Ethereum Transaction Parser",
+      "description": "Advanced transaction analysis agent that parses Ethereum transactions and visualizes contract interactions. This protocol decodes transaction calldata, traces contract calls, and generates human-readable explanations with interactive visualizations.",
+      "tags": ["Ethereum", "Transaction", "Analysis", "Mermaid"],
+      "icon": "🔍",
+      "category": "Blockchain Analysis",
+      "usageCount": 8543,
+      "rating": 4.9,
+      "price": 25,
+      "owner": "0xf1uyuh74gnj0c7abcd1234567890abcdef1234",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/ethereum-parser"],
+      "revenue": 213575,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { EthereumParserClient } from '@mcp/ethereum-parser';\n\nconst client = new EthereumParserClient({\n  apiKey: 'your-api-key'\n});\n\nconst analysis = await client.analyzeTransaction({\n  transactionHash: '0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6',\n  includeRawTrace: true,\n  generateMermaid: true,\n  naturalLanguageExplanation: true,\n  detailedInterpretation: true\n});",
+        "python": "# Example Python implementation\nfrom mcp_ethereum_parser import EthereumParserClient\n\nclient = EthereumParserClient(api_key='your-api-key')\n\nanalysis = client.analyze_transaction(\n    transaction_hash='0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6',\n    include_raw_trace=True,\n    generate_mermaid=True,\n    natural_language_explanation=True,\n    detailed_interpretation=True\n)",
+        "shell": "# Example Shell implementation\ncurl -X GET 'https://api.mcp.dog/v1/ethereum-parser/analyze/transaction/0xf3df3a7be16d240487284d2577fb7d737a992df3c1332164a13397ba0339b8e6?include_raw_trace=true' \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
+    },
+    {
+      "id": "22",
+      "title": "NEAR Price Alert Agent",
+      "description": "Real-time price monitoring agent for NEAR Protocol that tracks price movements and sends alerts when target thresholds are met. This agent accepts custom price targets, monitors cryptocurrency market data, and delivers instant notifications.",
+      "tags": ["NEAR", "Price Alert", "Cryptocurrency", "Monitoring"],
+      "icon": "📈",
+      "category": "Financial",
+      "usageCount": 7862,
+      "rating": 4.8,
+      "price": 18,
+      "owner": "0xf1uyuh74gnj0c7acdf1234567890nearprotocol12",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/near-price-alert"],
+      "revenue": 141516,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { NearPriceAlertClient } from '@mcp/near-price-alert';\n\nconst client = new NearPriceAlertClient({\n  apiKey: 'your-api-key'\n});\n\n// Set a price alert\nconst alertResponse = await client.setPriceAlert({\n  target: 3.0,\n  direction: 'above', // 'above' or 'below'\n  notificationMethod: 'webhook',\n  webhookUrl: 'https://your-server.com/webhook'\n});\n\n// Check current status\nconst statusResponse = await client.checkStatus();\n\n// Cancel an alert\nconst cancelResponse = await client.cancelAlert(alertResponse.alertId);",
+        "python": "# Example Python implementation\nfrom near_price_alert import NearPriceAlertClient\n\nclient = NearPriceAlertClient(api_key='your-api-key')\n\n# Set a price alert\nalert_response = client.set_price_alert(\n    target=3.0,\n    direction='above',  # 'above' or 'below'\n    notification_method='webhook',\n    webhook_url='https://your-server.com/webhook'\n)\n\n# Check current status\nstatus_response = client.check_status()\n\n# Cancel an alert\ncancel_response = client.cancel_alert(alert_response['alert_id'])",
+        "shell": "# Example Shell implementation\n# Set a price alert\ncurl -X POST 'https://api.mcp.dog/v1/near-price-alert/set' \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"target\": 3.0,\n    \"direction\": \"above\",\n    \"notification_method\": \"webhook\",\n    \"webhook_url\": \"https://your-server.com/webhook\"\n  }'\n\n# Check current status\ncurl -X GET 'https://api.mcp.dog/v1/near-price-alert/status' \\\n  -H \"Authorization: Bearer your-api-key\"\n\n# Cancel an alert\ncurl -X DELETE 'https://api.mcp.dog/v1/near-price-alert/cancel/ALERT_ID' \\\n  -H \"Authorization: Bearer your-api-key\""
+      }
     }
   ]
 }

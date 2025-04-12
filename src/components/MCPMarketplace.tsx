@@ -6,6 +6,8 @@ import Link from "next/link";
 
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
+import { MCPEvaluator } from "@/components/MCPEvaluator";
+import { ABItoMCP } from "@/components/ABItoMCP";
 import {
   Card,
   CardContent,
@@ -36,6 +38,9 @@ import {
   ChevronRight,
   BookOpen,
   PanelRight,
+  Activity,
+  Code,
+  Cpu,
 } from "lucide-react";
 
 // Import contract ABIs
@@ -118,7 +123,7 @@ interface MCP {
   };
 }
 
-type TabType = "usage" | "provide" | "dao";
+type TabType = "usage" | "provide" | "dao" | "evaluate" | "abiConverter";
 
 interface Proposal {
   id: number;
@@ -659,6 +664,29 @@ export function MCPMarketplace() {
         <div className="max-w-7xl mx-auto">
           {activeTab === "usage" && (
             <>
+              {/* Tabs for switching between sections */}
+              <Tabs value={activeTab} className="mb-6">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="usage" onClick={() => setActiveTab("usage")}>
+                    Use MCPs
+                  </TabsTrigger>
+                  <TabsTrigger value="evaluate" onClick={() => setActiveTab("evaluate")}>
+                    <Activity className="w-4 h-4 mr-2" />
+                    Evaluate
+                  </TabsTrigger>
+                  <TabsTrigger value="abiConverter" onClick={() => setActiveTab("abiConverter")}>
+                    <Code className="w-4 h-4 mr-2" />
+                    ABI to MCP
+                  </TabsTrigger>
+                  <TabsTrigger value="provide" onClick={() => setActiveTab("provide")}>
+                    Provide MCPs
+                  </TabsTrigger>
+                  <TabsTrigger value="dao" onClick={() => setActiveTab("dao")}>
+                    DAO Governance
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
               {/* Search Section */}
               <div className="mb-6 space-y-4">
                 <div className="flex items-center space-x-4">
@@ -895,6 +923,46 @@ export function MCPMarketplace() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {activeTab === "evaluate" && (
+            <div className="space-y-6">
+              {selectedMcp ? (
+                <MCPEvaluator 
+                  mcpId={selectedMcp.id}
+                  mcpName={selectedMcp.title}
+                  onRunEval={async (mcpId, testCaseIds) => {
+                    // This would call an actual API in production
+                    // For now, we're just returning mock data
+                    setLoading(true);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    setLoading(false);
+                    return [];
+                  }}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Activity className="w-12 h-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Select an MCP to Evaluate</h3>
+                      <p className="text-muted-foreground mb-4">
+                        First select an MCP from the &quot;Use MCPs&quot; tab to evaluate its performance
+                      </p>
+                      <Button onClick={() => setActiveTab("usage")}>
+                        Browse MCPs
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+          
+          {activeTab === "abiConverter" && (
+            <div className="space-y-6">
+              <ABItoMCP />
             </div>
           )}
 

@@ -184,16 +184,15 @@ export function Search({
                         </div>
                     )}
                 </div>
-                <Tooltip content={isProMode ? "Power Mode: Using advanced search" : "Enable Power Search"}>
-                    <Button
-                        variant={isProMode ? "default" : "outline"}
-                        size="icon"
-                        onClick={toggleSearchMode}
-                        className={`transition-colors duration-200 ${isProMode ? "bg-amber-500 hover:bg-amber-600" : ""}`}
-                    >
-                        <Zap className={`h-4 w-4 ${isProMode ? "text-white" : "text-muted-foreground"}`} />
-                    </Button>
-                </Tooltip>
+                <Button
+                    variant={isProMode ? "default" : "outline"}
+                    size="icon"
+                    onClick={toggleSearchMode}
+                    className={`transition-colors duration-200 ${isProMode ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                    title={isProMode ? "Power Mode: Using advanced search" : "Enable Power Search"}
+                >
+                    <Zap className={`h-4 w-4 ${isProMode ? "text-white" : "text-muted-foreground"}`} />
+                </Button>
             </div>
 
             {isProMode && (
