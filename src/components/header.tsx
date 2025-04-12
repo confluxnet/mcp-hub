@@ -8,10 +8,9 @@ import { PanelRight } from "lucide-react";
 interface HeaderProps {
   setIsSidebarOpen: (isOpen: boolean) => void;
   isSidebarOpen: boolean;
-  setActiveTab: (tab: "usage" | "provide" | "dao") => void;
 }
 
-export function Header({ setIsSidebarOpen, isSidebarOpen, setActiveTab }: HeaderProps) {
+export function Header({ setIsSidebarOpen, isSidebarOpen }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b z-40 flex items-center justify-between px-4">
       <div className="flex items-center space-x-4">

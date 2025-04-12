@@ -75,7 +75,6 @@ export default function McpPage({ params }: { params: { id: string } }) {
 
       <Aside
         isSidebarOpen={isSidebarOpen}
-        setActiveTab={setActiveTab}
         account={account}
         balance={balance}
         connectWallet={connectWallet}

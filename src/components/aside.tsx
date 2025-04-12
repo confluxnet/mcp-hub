@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { BarChart2, Package, Users, Wallet } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 interface AsideProps {
   isSidebarOpen: boolean;
-  setActiveTab: (tab: "usage" | "provide" | "dao") => void;
   account: string;
   balance: string;
   connectWallet: () => Promise<void>;
@@ -12,12 +13,32 @@ interface AsideProps {
 
 export function Aside({
   isSidebarOpen,
-  setActiveTab,
   account,
   balance,
   connectWallet,
   disconnectWallet,
 }: AsideProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const menuItems = [
+    {
+      label: "Usage Statistics",
+      icon: BarChart2,
+      href: "/",
+    },
+    {
+      label: "Provide MCPs",
+      icon: Package,
+      href: "/provide-mcps",
+    },
+    {
+      label: "DAO Governance",
+      icon: Users,
+      href: "/dao-governance",
+    },
+  ];
+
   return (
     <aside
       className={`
@@ -40,30 +61,24 @@ export function Aside({
       <div className="p-4">
         <h1 className="text-xl font-bold mb-6">MCP HUB</h1>
         <nav className="space-y-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start pl-4"
-            onClick={() => setActiveTab("usage")}
-          >
-            <BarChart2 className="w-4 h-4 mr-2" />
-            Usage Statistics
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start pl-4"
-            onClick={() => setActiveTab("provide")}
-          >
-            <Package className="w-4 h-4 mr-2" />
-            Provide MCPs
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start pl-4"
-            onClick={() => setActiveTab("dao")}
-          >
-            <Users className="w-4 h-4 mr-2" />
-            DAO Governance
-          </Button>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isSelected = pathname === item.href;
+
+            return (
+              <Button
+                key={item.href}
+                variant={isSelected ? "secondary" : "ghost"}
+                className="w-full justify-start pl-4"
+                asChild
+              >
+                <Link href={item.href}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </Link>
+              </Button>
+            );
+          })}
         </nav>
       </div>
 

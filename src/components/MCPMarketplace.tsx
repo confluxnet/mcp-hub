@@ -634,15 +634,10 @@ export function MCPMarketplace() {
 
   return (
     <div className="relative">
-      <Header
-        setIsSidebarOpen={setIsSidebarOpen}
-        isSidebarOpen={isSidebarOpen}
-        setActiveTab={setActiveTab}
-      />
+      <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
       <Aside
         isSidebarOpen={isSidebarOpen}
-        setActiveTab={setActiveTab}
         account={account}
         balance={balance}
         connectWallet={connectWallet}

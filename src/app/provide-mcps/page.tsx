@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import type { Eip1193Provider } from "ethers";
-import Link from "next/link";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
 import {
@@ -16,18 +15,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Filter } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Import contract ABIs
-import SagaTokenABI from "../contracts/SagaToken.json";
-import MCPPoolABI from "../contracts/MCPPool.json";
-import SagaDAOABI from "../contracts/SagaDAO.json";
-import BillingSystemABI from "../contracts/BillingSystem.json";
-
-// Import mock data
-import mockMcpsData from "@/data/mockMcps.json";
+import SagaTokenABI from "../../contracts/SagaToken.json";
+import MCPPoolABI from "../../contracts/MCPPool.json";
+import SagaDAOABI from "../../contracts/SagaDAO.json";
+import BillingSystemABI from "../../contracts/BillingSystem.json";
 
 // Contract addresses from environment variables
 const SAGA_TOKEN_ADDRESS =
@@ -84,10 +81,7 @@ declare global {
   }
 }
 
-// Use mockMcpsData.mcps instead
-const mockMcps = mockMcpsData.mcps;
-
-export default function Home() {
+export default function ProvideMcps() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [account, setAccount] = useState<string>("");
@@ -97,16 +91,19 @@ export default function Home() {
   const [billingSystem, setBillingSystem] = useState<ethers.Contract | null>(null);
   const [mcps, setMcps] = useState<MCP[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [useCase, setUseCase] = useState<string>("");
-  const [recommendedMcps, setRecommendedMcps] = useState<MCP[]>([]);
-  const [selectedMcp, setSelectedMcp] = useState<MCP | null>(null);
-  const [apiResponse, setApiResponse] = useState<string>("");
-  const [tokenBalance, setTokenBalance] = useState<string>("0");
-  const [usageStats, setUsageStats] = useState<{ total: number; today: number }>({
-    total: 0,
-    today: 0,
-  });
   const [balance, setBalance] = useState("0");
+  const [earnings, setEarnings] = useState("0");
+  const [newMcp, setNewMcp] = useState({
+    title: "",
+    description: "",
+    price: "",
+    apiEndpoints: "",
+    codeExamples: {
+      typescript: "",
+      python: "",
+      shell: "",
+    },
+  });
   const { toast } = useToast();
 
   // Handle responsive sidebar
@@ -291,94 +288,61 @@ export default function Home() {
     }
   };
 
-  // Find MCPs based on use case
-  const findMcpsForUseCase = async () => {
-    if (!useCase.trim()) return;
+  // Submit new MCP
+  const handleSubmitMcp = async () => {
+    if (!mcpPool) return;
 
     try {
       setLoading(true);
 
-      // This is a placeholder - in a real implementation, you would call an AI service
-      // to analyze the use case and recommend MCPs
-      const recommended = mcps.filter(
-        (mcp) =>
-          mcp.approved &&
-          mcp.active &&
-          (mcp.title.toLowerCase().includes(useCase.toLowerCase()) ||
-            mcp.description.toLowerCase().includes(useCase.toLowerCase()))
-      );
-
-      setRecommendedMcps(recommended);
-
-      if (recommended.length === 0) {
+      // Validate input
+      if (!newMcp.title || !newMcp.description || !newMcp.price || !newMcp.apiEndpoints) {
         toast({
-          title: "No MCPs Found",
-          description: "No MCPs match your use case. Try a different search.",
+          title: "Error",
+          description: "Please fill in all required fields",
           variant: "destructive",
         });
+        return;
       }
-    } catch (error) {
-      console.error("Error finding MCPs:", error);
-      toast({
-        title: "Error",
-        description: "Failed to find MCPs. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Use an MCP
-  const handleUseMcp = async (mcp: MCP) => {
-    if (!mcpPool || !billingSystem) return;
+      // Convert price to Wei
+      const priceInWei = ethers.parseEther(newMcp.price);
 
-    try {
-      setLoading(true);
-      setSelectedMcp(mcp);
-
-      // Process payment
-      const priceInWei = ethers.parseEther(mcp.price.toString());
-      const tx = await billingSystem.processPayment(mcp.owner, priceInWei);
+      // Submit MCP to the contract
+      const tx = await mcpPool.submitMcp(
+        newMcp.title,
+        newMcp.description,
+        priceInWei,
+        newMcp.apiEndpoints.split(",").map((endpoint) => endpoint.trim()),
+        newMcp.codeExamples
+      );
       await tx.wait();
 
-      // Call the MCP API (this is a placeholder)
-      // In a real implementation, you would call the actual API endpoint
-      const response = await fetch(mcp.apiEndpoints[0], {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Reset form
+      setNewMcp({
+        title: "",
+        description: "",
+        price: "",
+        apiEndpoints: "",
+        codeExamples: {
+          typescript: "",
+          python: "",
+          shell: "",
         },
-        body: JSON.stringify({ useCase }),
       });
 
-      const data = await response.json();
-      setApiResponse(JSON.stringify(data, null, 2));
-
-      // Update usage stats
-      setUsageStats((prev) => ({
-        total: prev.total + 1,
-        today: prev.today + 1,
-      }));
-
-      // Update token balance
-      if (sagaToken && account) {
-        const newBalance = await sagaToken.balanceOf(account);
-        setTokenBalance(ethers.formatEther(newBalance));
-      }
+      // Reload MCPs
+      await loadMcps();
 
       toast({
-        title: "MCP Used Successfully",
-        description: `You have used ${mcp.title} and paid ${mcp.price} SAGA tokens`,
+        title: "Success",
+        description: "MCP submitted successfully. Waiting for DAO approval.",
       });
-
-      // Reload MCPs to update usage count
-      await loadMcps();
     } catch (error) {
-      console.error("Error using MCP:", error);
+      console.error("Error submitting MCP:", error);
       toast({
         title: "Error",
-        description: "Failed to use MCP. Please try again.",
+        description: "Failed to submit MCP. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -432,112 +396,205 @@ export default function Home() {
         }`}
       >
         <div className="max-w-7xl mx-auto">
-          {/* Search and Filter Section */}
-          <div className="mb-6 space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Find MCPs for your use case..."
-                    className="pl-10"
-                    value={useCase}
-                    onChange={(e) => setUseCase(e.target.value)}
-                  />
-                </div>
+          <Tabs defaultValue="submit" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="submit">Submit MCP</TabsTrigger>
+              <TabsTrigger value="dashboard">Provider Dashboard</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="submit" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit MCP for DAO Approval</CardTitle>
+                  <CardDescription>
+                    Fill in the details of your MCP to submit it for DAO approval.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="title" className="text-sm font-medium">
+                      Title
+                    </label>
+                    <Input
+                      id="title"
+                      placeholder="Enter MCP title"
+                      value={newMcp.title}
+                      onChange={(e) => setNewMcp({ ...newMcp, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="description" className="text-sm font-medium">
+                      Description
+                    </label>
+                    <Textarea
+                      id="description"
+                      placeholder="Enter MCP description"
+                      value={newMcp.description}
+                      onChange={(e) => setNewMcp({ ...newMcp, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="price" className="text-sm font-medium">
+                      Price (SAGA tokens)
+                    </label>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="Enter price in SAGA tokens"
+                      value={newMcp.price}
+                      onChange={(e) => setNewMcp({ ...newMcp, price: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="apiEndpoints" className="text-sm font-medium">
+                      API Endpoints (comma-separated)
+                    </label>
+                    <Input
+                      id="apiEndpoints"
+                      placeholder="Enter API endpoints"
+                      value={newMcp.apiEndpoints}
+                      onChange={(e) => setNewMcp({ ...newMcp, apiEndpoints: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="codeExamples" className="text-sm font-medium">
+                      Code Examples
+                    </label>
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="typescript" className="text-sm font-medium">
+                          TypeScript
+                        </label>
+                        <Textarea
+                          id="typescript"
+                          placeholder="Enter TypeScript example"
+                          value={newMcp.codeExamples.typescript}
+                          onChange={(e) =>
+                            setNewMcp({
+                              ...newMcp,
+                              codeExamples: {
+                                ...newMcp.codeExamples,
+                                typescript: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="python" className="text-sm font-medium">
+                          Python
+                        </label>
+                        <Textarea
+                          id="python"
+                          placeholder="Enter Python example"
+                          value={newMcp.codeExamples.python}
+                          onChange={(e) =>
+                            setNewMcp({
+                              ...newMcp,
+                              codeExamples: {
+                                ...newMcp.codeExamples,
+                                python: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="shell" className="text-sm font-medium">
+                          Shell
+                        </label>
+                        <Textarea
+                          id="shell"
+                          placeholder="Enter Shell example"
+                          value={newMcp.codeExamples.shell}
+                          onChange={(e) =>
+                            setNewMcp({
+                              ...newMcp,
+                              codeExamples: {
+                                ...newMcp.codeExamples,
+                                shell: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={handleSubmitMcp} disabled={loading} className="w-full">
+                    {loading ? "Submitting..." : "Submit MCP"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="dashboard" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your MCPs</CardTitle>
+                    <CardDescription>Manage your submitted MCPs</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {mcps
+                        .filter((mcp) => mcp.owner === account)
+                        .map((mcp) => (
+                          <Card key={mcp.id}>
+                            <CardHeader>
+                              <CardTitle>{mcp.title}</CardTitle>
+                              <CardDescription>{mcp.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <p>
+                                  <strong>Price:</strong> {mcp.price} SAGA tokens
+                                </p>
+                                <p>
+                                  <strong>Usage Count:</strong> {mcp.usageCount}
+                                </p>
+                                <div className="flex space-x-2">
+                                  <Badge variant={mcp.approved ? "default" : "secondary"}>
+                                    {mcp.approved ? "Approved" : "Pending"}
+                                  </Badge>
+                                  <Badge variant={mcp.active ? "default" : "secondary"}>
+                                    {mcp.active ? "Active" : "Inactive"}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Earnings</CardTitle>
+                    <CardDescription>Your MCP earnings</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Total Earnings</span>
+                        <span className="text-2xl font-bold">{earnings} SAGA</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Available Balance</span>
+                        <span className="text-2xl font-bold">{balance} SAGA</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <Button onClick={findMcpsForUseCase} disabled={loading || !useCase.trim()}>
-                {loading ? "Searching..." : "Search"}
-              </Button>
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-            </div>
-          </div>
-
-          {/* Mock Tools Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockMcps.map((mcp) => (
-              <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
-                <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">{mcp.icon}</span>
-                        <CardTitle>{mcp.title}</CardTitle>
-                      </div>
-                      <Badge variant="secondary">{mcp.category}</Badge>
-                    </div>
-                    <CardDescription>{mcp.description}</CardDescription>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {mcp.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-1">
-                        <span>⭐</span>
-                        <span>{mcp.rating}</span>
-                      </div>
-                      <div className="text-muted-foreground">
-                        {mcp.usageCount.toLocaleString()} uses
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-
-          {/* Original MCP Cards Grid */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Available MCPs</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mcps.map((mcp) => (
-                <Card key={mcp.id}>
-                  <CardHeader>
-                    <CardTitle>{mcp.title}</CardTitle>
-                    <CardDescription>{mcp.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p>
-                        <strong>Price:</strong> {mcp.price} SAGA tokens
-                      </p>
-                      <p>
-                        <strong>Owner:</strong> {mcp.owner.slice(0, 6)}...{mcp.owner.slice(-4)}
-                      </p>
-                      <p>
-                        <strong>Usage Count:</strong> {mcp.usageCount}
-                      </p>
-                      <div className="flex space-x-2">
-                        <Badge variant={mcp.approved ? "default" : "secondary"}>
-                          {mcp.approved ? "Approved" : "Pending"}
-                        </Badge>
-                        <Badge variant={mcp.active ? "default" : "secondary"}>
-                          {mcp.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      onClick={() => handleUseMcp(mcp)}
-                      disabled={loading || !mcp.approved || !mcp.active}
-                      className="w-full"
-                    >
-                      Use MCP
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
