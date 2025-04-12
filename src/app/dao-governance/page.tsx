@@ -96,6 +96,7 @@ export default function DaoGovernance() {
   const [pendingMcps, setPendingMcps] = useState<MCP[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [newMcpPool, setNewMcpPool] = useState<ethers.Contract | null>(null);
 
   const [votingPower, setVotingPower] = useState("0");
   const [newProposal, setNewProposal] = useState({
@@ -111,9 +112,30 @@ export default function DaoGovernance() {
   const { walletState, connectWallet } = useWallet();
   const { account, balance, mcpPool, sagaToken, sagaDao, billingSystem } = walletState;
 
+  // mcpPool 초기화 함수
+  const initializeMcpPool = async () => {
+    if (!account || !window.ethereum) return;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const mcpPoolContract = new ethers.Contract(MCP_POOL_ADDRESS, MCPPoolABI.abi, signer);
+
+      setNewMcpPool(mcpPoolContract);
+      return mcpPoolContract;
+    } catch (error) {
+      console.error("Error initializing MCP Pool:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize MCP Pool contract",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   // Handle responsive sidebar
   useEffect(() => {
-    loadMcps();
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -128,15 +150,22 @@ export default function DaoGovernance() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // mcpPool이 없을 때 초기화
+  useEffect(() => {
+    initializeMcpPool();
+    loadMcps();
+  }, [account]);
+
   // Load MCPs from the contract
   const loadMcps = async () => {
-    if (!mcpPool) return;
+    const poolToUse = mcpPool || newMcpPool;
+    if (!poolToUse) return;
 
     try {
       setLoading(true);
       // This is a placeholder - you'll need to implement the actual contract call
       try {
-        const mcpsData = await mcpPool.getMCP(0);
+        const mcpsData = await poolToUse.getMCP(0);
         console.log(mcpsData);
 
         const formattedMcps: any = mcpsData.map((mcp: any) => ({
@@ -233,17 +262,18 @@ export default function DaoGovernance() {
 
   // Approve or reject an MCP
   const handleMcpDecision = async (mcpId: string, approve: boolean) => {
-    if (!mcpPool) return;
+    const poolToUse = mcpPool || newMcpPool;
+    if (!poolToUse) return;
 
     try {
       setLoading(true);
 
       // Log contract interface to check available functions
-      console.log("Contract interface:", mcpPool.interface);
+      console.log("Contract interface:", poolToUse.interface);
 
       // Check if the contract has the required function
       const functionName = approve ? "approveMCP" : "rejectMCP";
-      const functionFragment = mcpPool.interface.getFunction(functionName);
+      const functionFragment = poolToUse.interface.getFunction(functionName);
 
       if (!functionFragment) {
         throw new Error(`Contract does not have ${functionName} function`);
@@ -252,7 +282,7 @@ export default function DaoGovernance() {
       console.log(`${functionName} function fragment:`, functionFragment);
 
       // Call the appropriate contract function
-      const tx = await mcpPool[functionName](mcpId);
+      const tx = await poolToUse[functionName](mcpId);
       await tx.wait();
 
       // Reset form
@@ -280,7 +310,8 @@ export default function DaoGovernance() {
 
   // Create a new proposal
   const handleCreateProposal = async () => {
-    if (!sagaDao || !account || !mcpPool) return;
+    const poolToUse = mcpPool || newMcpPool;
+    if (!sagaDao || !account || !poolToUse) return;
 
     try {
       setLoading(true);
@@ -300,7 +331,7 @@ export default function DaoGovernance() {
 
       // Create proposal
       const tx = await sagaDao.propose(
-        [mcpPool.address], // targets: MCPPool 컨트랙트 주소
+        [poolToUse.address], // targets: MCPPool 컨트랙트 주소
         [0], // values: ETH 전송량 (0으로 설정)
         [ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [selectedMcp?.id || 0])], // calldatas: approveMCP 함수 호출 데이터
         newProposal.description // description: 제안 설명
