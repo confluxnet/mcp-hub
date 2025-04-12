@@ -88,6 +88,11 @@ interface MCP {
   approved?: boolean;
   active?: boolean;
   revenue?: number;
+  allParameters?: {
+    pathParams: { key: string; type: string; required: boolean }[];
+    queryParams: { key: string; type: string; required: boolean }[];
+    bodyParams: { key: string; type: string; required: boolean }[];
+  };
 }
 
 interface MetaMaskProvider extends Eip1193Provider {
@@ -495,95 +500,432 @@ export default function ProvideMcps() {
     }));
   }, [apiParams.pathParams]);
 
+  // Handle file import
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith(".json")) {
+      toast({
+        title: "Error",
+        description: "Please select a JSON file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("File selected:", file.name, "Size:", file.size, "Type:", file.type);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        console.log("File content length:", content.length);
+        console.log("File content preview:", content.substring(0, 100) + "...");
+
+        // Validate JSON content
+        if (!content || content.trim() === "") {
+          throw new Error("File is empty");
+        }
+
+        // Try parsing JSON to validate format
+        const parsedJson = JSON.parse(content);
+        console.log("JSON parsed successfully:", parsedJson.openapi || parsedJson.swagger);
+
+        // If parsing succeeds, set the content and proceed
+        setOpenApiJson(content);
+
+        // Process the OpenAPI JSON directly instead of calling handleOpenApiImport
+        processOpenApiJson(parsedJson);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        toast({
+          title: "Invalid JSON File",
+          description:
+            error instanceof Error
+              ? `Error: ${error.message}. Please make sure the file contains valid JSON.`
+              : "The file does not contain valid JSON. Please check the file format.",
+          variant: "destructive",
+        });
+        // Reset the file input
+        if (event.target) {
+          event.target.value = "";
+        }
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error("FileReader error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to read the file. Please try again.",
+        variant: "destructive",
+      });
+    };
+
+    reader.readAsText(file);
+  };
+
+  // Process OpenAPI JSON
+  const processOpenApiJson = (parsedJson: any) => {
+    try {
+      // Validate OpenAPI specification
+      if (!parsedJson.openapi && !parsedJson.swagger) {
+        throw new Error("Invalid OpenAPI specification: Missing version information");
+      }
+
+      if (!parsedJson.paths || Object.keys(parsedJson.paths).length === 0) {
+        throw new Error("Invalid OpenAPI specification: No endpoints defined");
+      }
+
+      // Extract API information from OpenAPI JSON
+      if (parsedJson.info) {
+        if (!parsedJson.info.title) {
+          toast({
+            title: "Warning",
+            description: "OpenAPI specification is missing a title",
+            variant: "default",
+          });
+        }
+        setSelectedMcp((prev) => ({
+          ...prev,
+          title: parsedJson.info.title || prev.title,
+          description: parsedJson.info.description || prev.description,
+        }));
+      }
+
+      // Extract API endpoints
+      const endpoints = Object.keys(parsedJson.paths);
+      // setSelectedMcp((prev) => ({
+      //   ...prev,
+      //   apiEndpoints: endpoints,
+      // }));
+
+      // Use the first endpoint as the default for the form
+      const firstPath = endpoints[0];
+      const methods = Object.keys(parsedJson.paths[firstPath]);
+
+      if (methods.length === 0) {
+        throw new Error(`No HTTP methods defined for endpoint: ${firstPath}`);
+      }
+
+      const firstMethod = methods[0];
+      const pathInfo = parsedJson.paths[firstPath][firstMethod];
+
+      if (!pathInfo) {
+        throw new Error(`Invalid endpoint configuration for: ${firstPath}`);
+      }
+
+      try {
+        // Extract path parameters
+        const pathParams: { key: string; type: string; required: boolean }[] = [];
+        const pathRegex = /{([^}]+)}/g;
+        let match;
+        while ((match = pathRegex.exec(firstPath)) !== null) {
+          const paramName = match[1];
+          const paramInfo = pathInfo.parameters?.find(
+            (p: any) => p.name === paramName && p.in === "path"
+          );
+          pathParams.push({
+            key: paramName,
+            type: paramInfo?.schema?.type || "string",
+            required: paramInfo?.required || true,
+          });
+        }
+
+        // Set method and path
+        setApiParams((prev) => ({
+          ...prev,
+          method: firstMethod.toUpperCase(),
+          path: firstPath,
+          pathParams,
+        }));
+
+        // Extract query parameters
+        if (pathInfo.parameters) {
+          const queryParams = pathInfo.parameters
+            .filter((param: any) => param.in === "query")
+            .map((param: any) => ({
+              key: param.name,
+              type: param.schema?.type || "string",
+              required: param.required || false,
+            }));
+
+          setApiParams((prev) => ({
+            ...prev,
+            queryParams,
+          }));
+        }
+
+        // Extract request body
+        if (pathInfo.requestBody?.content?.["application/json"]?.schema?.properties) {
+          const bodyParams = Object.entries(
+            pathInfo.requestBody.content["application/json"].schema.properties
+          ).map(([key, value]: [string, any]) => ({
+            key,
+            type: value.type || "string",
+            required:
+              pathInfo.requestBody.content["application/json"].schema.required?.includes(key) ||
+              false,
+          }));
+
+          setApiParams((prev) => ({
+            ...prev,
+            bodyParams,
+          }));
+        }
+
+        // Generate code examples
+        const typescriptExample = generateTypeScriptExample(firstPath, firstMethod, pathInfo);
+        const pythonExample = generatePythonExample(firstPath, firstMethod, pathInfo);
+        const shellExample = generateShellExample(firstPath, firstMethod, pathInfo);
+
+        setSelectedMcp((prev) => ({
+          ...prev,
+          codeExamples: {
+            typescript: typescriptExample,
+            python: pythonExample,
+            shell: shellExample,
+          },
+        }));
+
+        toast({
+          title: "Success",
+          description: "OpenAPI specification imported successfully",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error("Error processing OpenAPI specification:", error);
+        toast({
+          title: "Error",
+          description: "Failed to process OpenAPI specification. Please check the format.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing OpenAPI JSON:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to process OpenAPI specification",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Handle OpenAPI JSON import
   const handleOpenApiImport = () => {
     try {
       const parsedJson = JSON.parse(openApiJson);
-
-      // Extract API information from OpenAPI JSON
-      if (parsedJson.paths) {
-        const paths = Object.keys(parsedJson.paths);
-        if (paths.length > 0) {
-          const firstPath = paths[0];
-          const methods = Object.keys(parsedJson.paths[firstPath]);
-
-          if (methods.length > 0) {
-            const firstMethod = methods[0];
-            const pathInfo = parsedJson.paths[firstPath][firstMethod];
-
-            // Extract path parameters
-            const pathParams: { key: string; type: string; required: boolean }[] = [];
-            const pathRegex = /{([^}]+)}/g;
-            let match;
-            while ((match = pathRegex.exec(firstPath)) !== null) {
-              const paramName = match[1];
-              const paramInfo = pathInfo.parameters?.find(
-                (p: any) => p.name === paramName && p.in === "path"
-              );
-              pathParams.push({
-                key: paramName,
-                type: paramInfo?.schema?.type || "string",
-                required: paramInfo?.required || true,
-              });
-            }
-
-            // Set method and path
-            setApiParams((prev) => ({
-              ...prev,
-              method: firstMethod.toUpperCase(),
-              path: firstPath,
-              pathParams,
-            }));
-
-            // Extract query parameters
-            if (pathInfo.parameters) {
-              const queryParams = pathInfo.parameters
-                .filter((param: any) => param.in === "query")
-                .map((param: any) => ({
-                  key: param.name,
-                  type: param.schema?.type || "string",
-                  required: param.required || false,
-                }));
-
-              setApiParams((prev) => ({
-                ...prev,
-                queryParams,
-              }));
-            }
-
-            // Extract request body
-            if (pathInfo.requestBody?.content?.["application/json"]?.schema?.properties) {
-              const bodyParams = Object.entries(
-                pathInfo.requestBody.content["application/json"].schema.properties
-              ).map(([key, value]: [string, any]) => ({
-                key,
-                type: value.type || "string",
-                required:
-                  pathInfo.requestBody.content["application/json"].schema.required?.includes(key) ||
-                  false,
-              }));
-
-              setApiParams((prev) => ({
-                ...prev,
-                bodyParams,
-              }));
-            }
-
-            toast({
-              title: "OpenAPI JSON Imported",
-              description: "API parameters have been extracted from the OpenAPI JSON.",
-            });
-          }
-        }
-      }
+      processOpenApiJson(parsedJson);
     } catch (error) {
       console.error("Error parsing OpenAPI JSON:", error);
       toast({
         title: "Error",
-        description: "Failed to parse OpenAPI JSON. Please check the format.",
+        description:
+          error instanceof Error ? error.message : "Failed to parse OpenAPI specification",
         variant: "destructive",
       });
     }
+  };
+
+  // Generate TypeScript code example
+  const generateTypeScriptExample = (path: string, method: string, pathInfo: any) => {
+    const endpoint = path;
+    const methodUpper = method.toUpperCase();
+    const params = pathInfo.parameters || [];
+    const requestBody =
+      pathInfo.requestBody?.content?.["application/json"]?.schema?.properties || {};
+
+    let example = `// TypeScript example for ${endpoint}\n`;
+    example += `async function call${path
+      .split("/")
+      .filter(Boolean)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join("")}() {\n`;
+    example += `  const url = 'https://api.example.com${endpoint}';\n`;
+
+    // Add parameters
+    if (params.length > 0) {
+      example += `  const params = {\n`;
+      params.forEach((param: any) => {
+        example += `    ${param.name}: 'value', // ${param.description || "No description"}\n`;
+      });
+      example += `  };\n`;
+    }
+
+    // Add request body
+    if (Object.keys(requestBody).length > 0) {
+      example += `  const body = {\n`;
+      Object.entries(requestBody).forEach(([key, value]: [string, any]) => {
+        example += `    ${key}: 'value', // ${value.description || "No description"}\n`;
+      });
+      example += `  };\n`;
+    }
+
+    // Add fetch call
+    example += `  const response = await fetch(url, {\n`;
+    example += `    method: '${methodUpper}',\n`;
+    example += `    headers: {\n`;
+    example += `      'Content-Type': 'application/json',\n`;
+    example += `    },\n`;
+
+    if (params.length > 0) {
+      example += `    // Add query parameters\n`;
+      example += `    // const queryString = new URLSearchParams(params).toString();\n`;
+      example += `    // const urlWithParams = \`\${url}?\${queryString}\`;\n`;
+    }
+
+    if (Object.keys(requestBody).length > 0) {
+      example += `    body: JSON.stringify(body),\n`;
+    }
+
+    example += `  });\n`;
+    example += `  const data = await response.json();\n`;
+    example += `  return data;\n`;
+    example += `}\n`;
+
+    return example;
+  };
+
+  // Generate Python code example
+  const generatePythonExample = (path: string, method: string, pathInfo: any) => {
+    const endpoint = path;
+    const methodUpper = method.toUpperCase();
+    const params = pathInfo.parameters || [];
+    const requestBody =
+      pathInfo.requestBody?.content?.["application/json"]?.schema?.properties || {};
+
+    let example = `# Python example for ${endpoint}\n`;
+    example += `import requests\n\n`;
+    example += `def call_${path.split("/").filter(Boolean).join("_")}():\n`;
+    example += `    url = 'https://api.example.com${endpoint}'\n`;
+
+    // Add parameters
+    if (params.length > 0) {
+      example += `    params = {\n`;
+      params.forEach((param: any) => {
+        example += `        '${param.name}': 'value',  # ${
+          param.description || "No description"
+        }\n`;
+      });
+      example += `    }\n`;
+    }
+
+    // Add request body
+    if (Object.keys(requestBody).length > 0) {
+      example += `    body = {\n`;
+      Object.entries(requestBody).forEach(([key, value]: [string, any]) => {
+        example += `        '${key}': 'value',  # ${value.description || "No description"}\n`;
+      });
+      example += `    }\n`;
+    }
+
+    // Add request call
+    example += `    headers = {\n`;
+    example += `        'Content-Type': 'application/json'\n`;
+    example += `    }\n\n`;
+
+    if (params.length > 0) {
+      example += `    # Add query parameters\n`;
+      example += `    # response = requests.${method.toLowerCase()}(url, params=params, headers=headers)\n`;
+    } else if (Object.keys(requestBody).length > 0) {
+      example += `    # Send request with body\n`;
+      example += `    # response = requests.${method.toLowerCase()}(url, json=body, headers=headers)\n`;
+    } else {
+      example += `    # Send request\n`;
+      example += `    # response = requests.${method.toLowerCase()}(url, headers=headers)\n`;
+    }
+
+    example += `    # data = response.json()\n`;
+    example += `    # return data\n`;
+
+    return example;
+  };
+
+  // Generate Shell code example
+  const generateShellExample = (path: string, method: string, pathInfo: any) => {
+    const endpoint = path;
+    const methodUpper = method.toUpperCase();
+    const params = pathInfo.parameters || [];
+    const requestBody =
+      pathInfo.requestBody?.content?.["application/json"]?.schema?.properties || {};
+
+    let example = `# Shell example for ${endpoint}\n`;
+
+    // Build curl command
+    let curlCommand = `curl -X ${methodUpper} 'https://api.example.com${endpoint}'`;
+
+    // Add headers
+    curlCommand += ` \\\n  -H 'Content-Type: application/json'`;
+
+    // Add query parameters
+    if (params.length > 0) {
+      const queryParams = params
+        .filter((param: any) => param.in === "query")
+        .map((param: any) => `${param.name}=value`)
+        .join("&");
+
+      if (queryParams) {
+        curlCommand += ` \\\n  -G \\\n  --data-urlencode '${queryParams}'`;
+      }
+    }
+
+    // Add request body
+    if (Object.keys(requestBody).length > 0) {
+      const bodyJson = JSON.stringify(
+        Object.fromEntries(Object.entries(requestBody).map(([key]) => [key, "value"])),
+        null,
+        2
+      );
+
+      curlCommand += ` \\\n  -d '${bodyJson}'`;
+    }
+
+    example += curlCommand;
+
+    return example;
+  };
+
+  // Add all parameters from imported OpenAPI
+  const addAllParameters = () => {
+    if (!selectedMcp.allParameters) return;
+
+    // Add all path parameters
+    selectedMcp.allParameters.pathParams.forEach((param) => {
+      if (!apiParams.pathParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          pathParams: [...prev.pathParams, param],
+        }));
+      }
+    });
+
+    // Add all query parameters
+    selectedMcp.allParameters.queryParams.forEach((param) => {
+      if (!apiParams.queryParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          queryParams: [...prev.queryParams, param],
+        }));
+      }
+    });
+
+    // Add all body parameters
+    selectedMcp.allParameters.bodyParams.forEach((param) => {
+      if (!apiParams.bodyParams.some((p) => p.key === param.key)) {
+        setApiParams((prev) => ({
+          ...prev,
+          bodyParams: [...prev.bodyParams, param],
+        }));
+      }
+    });
+
+    toast({
+      title: "Parameters Added",
+      description: "All parameters from the OpenAPI JSON have been added to the form.",
+    });
   };
 
   return (
@@ -612,10 +954,29 @@ export default function ProvideMcps() {
             <TabsContent value="submit" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Submit MCP for DAO Approval</CardTitle>
-                  <CardDescription>
-                    Fill in the details of your MCP to submit it for DAO approval.
-                  </CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Submit MCP for DAO Approval</CardTitle>
+                      <CardDescription>
+                        Fill in the details of your MCP to submit it for DAO approval.
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="file"
+                        id="openapi-file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleFileImport}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById("openapi-file")?.click()}
+                      >
+                        Import OpenAPI File
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -680,6 +1041,11 @@ export default function ProvideMcps() {
                         <Button variant="outline" size="sm" onClick={() => addParameter("body")}>
                           Add Body Param
                         </Button>
+                        {selectedMcp.allParameters && (
+                          <Button variant="outline" size="sm" onClick={addAllParameters}>
+                            Add All Params
+                          </Button>
+                        )}
                       </div>
                     </div>
 
@@ -878,6 +1244,106 @@ export default function ProvideMcps() {
                   </Button>
                 </CardFooter>
               </Card>
+
+              {/* Code Examples Card */}
+              {selectedMcp.codeExamples &&
+                (selectedMcp.codeExamples.typescript ||
+                  selectedMcp.codeExamples.python ||
+                  selectedMcp.codeExamples.shell) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Generated Code Examples</CardTitle>
+                      <CardDescription>
+                        Code examples generated from your OpenAPI specification.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {selectedMcp.codeExamples.typescript && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">TypeScript</label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  selectedMcp.codeExamples?.typescript || ""
+                                );
+                                toast({
+                                  title: "Copied",
+                                  description: "TypeScript code copied to clipboard",
+                                });
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                            <pre className="text-xs font-mono whitespace-pre-wrap">
+                              {selectedMcp.codeExamples.typescript}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedMcp.codeExamples.python && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">Python</label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  selectedMcp.codeExamples?.python || ""
+                                );
+                                toast({
+                                  title: "Copied",
+                                  description: "Python code copied to clipboard",
+                                });
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                            <pre className="text-xs font-mono whitespace-pre-wrap">
+                              {selectedMcp.codeExamples.python}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedMcp.codeExamples.shell && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">Shell (cURL)</label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  selectedMcp.codeExamples?.shell || ""
+                                );
+                                toast({
+                                  title: "Copied",
+                                  description: "Shell code copied to clipboard",
+                                });
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto">
+                            <pre className="text-xs font-mono whitespace-pre-wrap">
+                              {selectedMcp.codeExamples.shell}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
             </TabsContent>
 
             <TabsContent value="dashboard" className="space-y-6">
