@@ -67,11 +67,7 @@ export default function McpPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="relative">
-      <Header
-        setIsSidebarOpen={setIsSidebarOpen}
-        isSidebarOpen={isSidebarOpen}
-        setActiveTab={setActiveTab}
-      />
+      <Header setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 
       <Aside
         isSidebarOpen={isSidebarOpen}
@@ -130,7 +126,7 @@ export default function McpPage({ params }: { params: { id: string } }) {
                       <div>
                         <h3 className="font-medium">Getting Started</h3>
                         <p className="text-sm text-muted-foreground">
-                          To use {mcp.title}, you'll need to obtain an API key from the MCP
+                          To use {mcp.title}, you&apos;ll need to obtain an API key from the MCP
                           Marketplace. Once you have your API key, you can use it to authenticate
                           your requests.
                         </p>

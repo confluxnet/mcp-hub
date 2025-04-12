@@ -863,7 +863,7 @@ export function MCPMarketplace() {
                               ))}
                           </div>
                         ) : (
-                          <p>You haven't created any MCPs yet</p>
+                          <p>You haven&apos;t created any MCPs yet</p>
                         )}
                       </CardContent>
                     </Card>
