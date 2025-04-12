@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BarChart2, Package, Users, Wallet } from "lucide-react";
+import { BarChart2, Package, Users, Wallet, BookOpen } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -26,6 +26,11 @@ export function Aside({
       label: "Usage Statistics",
       icon: BarChart2,
       href: "/",
+    },
+    {
+      label: "Story Protocol",
+      icon: BookOpen,
+      href: "/story-protocol",
     },
     {
       label: "Provide MCPs",
