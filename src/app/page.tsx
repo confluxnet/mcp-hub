@@ -102,45 +102,46 @@ export default function Home() {
   const { walletState, connectWallet } = useWallet();
   const { account, balance, mcpPool, sagaToken, billingSystem } = walletState;
 
-  // Load MCPs from Firestore
-  const loadMcps = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch MCPs from Firestore
-      const response = await fetch("/api/mcp-list");
-      const result = await response.json();
-      console.log("result", result);
-
-      if (result.mcps) {
-        // Filter only approved and active MCPs
-        const approvedMcps = result.mcps.filter((mcp: MCP) => mcp.approved && mcp.active);
-        setMcps(approvedMcps);
-      } else {
-        console.error("No MCPs found in Firestore");
-        setMcps([]);
-        toast({
-          title: "Warning",
-          description: "Could not load MCPs from Firestore.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error loading MCPs from Firestore:", error);
-      setMcps([]);
-      toast({
-        title: "Error",
-        description: "Failed to load MCPs. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle responsive sidebar
   useEffect(() => {
+    // Load MCPs from Firestore
+    const loadMcps = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch MCPs from Firestore
+        const response = await fetch("/api/mcp-list");
+        const result = await response.json();
+        console.log("result", result);
+
+        if (result.mcps) {
+          // Filter only approved and active MCPs
+          const approvedMcps = result.mcps.filter((mcp: MCP) => mcp.approved && mcp.active);
+          setMcps(approvedMcps);
+        } else {
+          console.error("No MCPs found in Firestore");
+          setMcps([]);
+          toast({
+            title: "Warning",
+            description: "Could not load MCPs from Firestore.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading MCPs from Firestore:", error);
+        setMcps([]);
+        toast({
+          title: "Error",
+          description: "Failed to load MCPs. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadMcps();
+    
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -153,7 +154,7 @@ export default function Home() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [loadMcps]);
+  }, [toast]);
 
   // Find MCPs based on use case
   const findMcpsForUseCase = async () => {
@@ -236,8 +237,20 @@ export default function Home() {
         description: `You have used ${mcp.title} and paid ${mcp.price} SAGA tokens`,
       });
 
-      // Reload MCPs to update usage count
-      await loadMcps();
+      // Reload MCPs to update usage count (calling useEffect's loadMcps not possible here)
+      try {
+        setLoading(true);
+        const response = await fetch("/api/mcp-list");
+        const result = await response.json();
+        if (result.mcps) {
+          const approvedMcps = result.mcps.filter((mcp: MCP) => mcp.approved && mcp.active);
+          setMcps(approvedMcps);
+        }
+      } catch (error) {
+        console.error("Error reloading MCPs:", error);
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Error using MCP:", error);
       toast({
