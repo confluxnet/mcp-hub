@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { formatEther, parseEther } from "ethers/lib/utils";
 // Define a custom type for MetaMask provider
@@ -107,7 +107,7 @@ export default function Home() {
   const { account, balance, mcpPool, sagaToken, billingSystem } = walletState;
 
   // Load MCPs from Firestore
-  const loadMcps = async () => {
+  const loadMcps = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -140,11 +140,12 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Handle responsive sidebar
+  // Handle responsive sidebar and load initial data
   useEffect(() => {
     loadMcps();
+
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth < 768) {
@@ -157,7 +158,7 @@ export default function Home() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [loadMcps]);
 
   // Find MCPs based on use case
   const findMcpsForUseCase = async () => {

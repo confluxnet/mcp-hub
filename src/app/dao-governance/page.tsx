@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { formatEther, parseEther } from "ethers/lib/utils";
 // Define a custom type for MetaMask provider
@@ -117,97 +117,56 @@ export default function DaoGovernance() {
   const { account, balance, mcpPool, sagaToken, sagaDao, billingSystem } = walletState;
 
   // Initialize MCP Pool
-  const initializeMcpPool = async () => {
+  const initializeMcpPool = useCallback(async () => {
     if (!account || !window.ethereum) return;
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
       const mcpPoolContract = new ethers.Contract(MCP_POOL_ADDRESS, MCPPoolABI.abi, signer);
-
       setNewMcpPool(mcpPoolContract);
-      return mcpPoolContract;
     } catch (error) {
       console.error("Error initializing MCP Pool:", error);
       toast({
         title: "Error",
-        description: "Failed to initialize MCP Pool contract",
+        description: "Failed to initialize MCP Pool. Please try again.",
         variant: "destructive",
       });
-      return null;
     }
-  };
+  }, [account, toast]);
 
   // Load MCPs from the contract
-  const loadMcps = async () => {
+  const loadMcps = useCallback(async () => {
     const poolToUse = mcpPool || newMcpPool;
     if (!poolToUse) return;
 
     try {
       setLoading(true);
-      // This is a placeholder - you'll need to implement the actual contract call
-      try {
-        // getMCP 함수가 단일 객체를 반환하는 것으로 보임
-        const mcpData = await poolToUse.getMCP(0);
-        console.log("MCP Data:", mcpData);
+      const mcpsCount = await poolToUse.getMcpsCount();
+      const formattedMcps: MCP[] = [];
 
-        // Check if mcpData is an array
-        if (Array.isArray(mcpData)) {
-          // Handle array of MCPs
-          const formattedMcps: MCP[] = mcpData.map((mcp: any) => ({
-            id: mcp.id,
-            title: mcp.title,
-            description: mcp.description,
-            tags: mcp.tags || [],
-            icon: mcp.icon,
-            category: mcp.category,
-            usageCount: mcp.usageCount.toNumber(),
-            rating: mcp.rating,
-            price: parseFloat(formatEther(mcp.price)),
-            owner: mcp.owner,
-            approved: mcp.approved,
-            active: mcp.active,
-            apiEndpoints: mcp.apiEndpoints || [],
-            revenue: parseFloat(formatEther(mcp.revenue)),
-            codeExamples: mcp.codeExamples,
-          }));
-        } else {
-          // Handle single MCP object
-          const formattedMcps: MCP[] = [
-            {
-              id: mcpData.id || "0",
-              title: mcpData.name || "Untitled MCP",
-              description: mcpData.description || "No description available",
-              usageCount: 0,
-              price: 3,
-              owner: mcpData.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
-              approved: mcpData.approved || false,
-              active: mcpData.active || false,
-              apiEndpoints: mcpData.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
-              codeExamples: {},
-              tags: [],
-              icon: "",
-              category: "",
-              revenue: 0,
-            },
-          ];
-          console.log("[DEBUG] formattedMcps", formattedMcps);
-        }
-
-        setMcps(formattedMcps);
-        setPendingMcps(formattedMcps.filter((mcp) => !mcp.approved));
-      } catch (mcpError) {
-        console.error("Error loading MCPs from contract:", mcpError);
-        // Set empty array if there's an error
-        setMcps([]);
-        setPendingMcps([]);
-        toast({
-          title: "Warning",
-          description:
-            "Could not load MCPs. The contract might not be deployed or the address might be incorrect.",
-          variant: "destructive",
+      for (let i = 0; i < mcpsCount; i++) {
+        const mcp = await poolToUse.mcps(i);
+        formattedMcps.push({
+          id: i.toString(),
+          title: mcp.title,
+          description: mcp.description,
+          price: parseFloat(formatEther(mcp.price)),
+          apiEndpoints: mcp.apiEndpoints,
+          codeExamples: mcp.codeExamples,
+          tags: mcp.tags,
+          icon: mcp.icon,
+          category: mcp.category,
+          usageCount: mcp.usageCount.toNumber(),
+          owner: mcp.owner,
+          approved: mcp.approved,
+          active: mcp.active,
+          revenue: parseFloat(formatEther(mcp.revenue)),
         });
       }
+
+      setMcps(formattedMcps);
+      setPendingMcps(formattedMcps.filter((mcp) => !mcp.approved));
     } catch (error) {
       console.error("Error loading MCPs:", error);
       toast({
@@ -218,7 +177,7 @@ export default function DaoGovernance() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mcpPool, newMcpPool, toast]);
 
   // Handle responsive sidebar
   useEffect(() => {
