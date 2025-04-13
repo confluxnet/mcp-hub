@@ -102,23 +102,6 @@ export default function Home() {
   const { walletState, connectWallet } = useWallet();
   const { account, balance, mcpPool, sagaToken, billingSystem } = walletState;
 
-  // Handle responsive sidebar
-  useEffect(() => {
-    loadMcps();
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   // Load MCPs from Firestore
   const loadMcps = async () => {
     try {
@@ -154,6 +137,23 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    loadMcps();
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [loadMcps]);
 
   // Find MCPs based on use case
   const findMcpsForUseCase = async () => {
@@ -301,40 +301,50 @@ export default function Home() {
 
           {/* Mock Tools Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...mcps].reverse().map((mcp) => (
-              <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
-                <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">{mcp.icon}</span>
-                        <CardTitle>{mcp.title}</CardTitle>
+            {[...mcps]
+              .sort((a, b) => {
+                // If a has ID "0", it should come first
+                if (a.id === "0") return -1;
+                // If b has ID "0", it should come first
+                if (b.id === "0") return 1;
+                // Otherwise maintain reverse order
+                return 0;
+              })
+              .reverse()
+              .map((mcp) => (
+                <Link href={`/mcp/${mcp.id}`} key={mcp.id} className="block">
+                  <Card className="h-full hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">{mcp.icon}</span>
+                          <CardTitle>{mcp.title}</CardTitle>
+                        </div>
+                        <Badge variant="secondary">{mcp.category}</Badge>
                       </div>
-                      <Badge variant="secondary">{mcp.category}</Badge>
-                    </div>
-                    <CardDescription>{mcp.description}</CardDescription>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {mcp.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-1">
-                        <span>⭐</span>
-                        <span>{mcp.rating}</span>
+                      <CardDescription>{mcp.description}</CardDescription>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {mcp.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
-                      <div className="text-muted-foreground">
-                        {mcp.usageCount.toLocaleString()} uses
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-1">
+                          <span>⭐</span>
+                          <span>{mcp.rating}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          {mcp.usageCount.toLocaleString()} uses
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
           </div>
 
           {/* Original MCP Cards Grid */}

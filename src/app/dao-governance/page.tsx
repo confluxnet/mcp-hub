@@ -112,7 +112,7 @@ export default function DaoGovernance() {
   const { walletState, connectWallet } = useWallet();
   const { account, balance, mcpPool, sagaToken, sagaDao, billingSystem } = walletState;
 
-  // mcpPool 초기화 함수
+  // Initialize MCP Pool
   const initializeMcpPool = async () => {
     if (!account || !window.ethereum) return;
 
@@ -133,28 +133,6 @@ export default function DaoGovernance() {
       return null;
     }
   };
-
-  // Handle responsive sidebar
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // mcpPool이 없을 때 초기화
-  useEffect(() => {
-    initializeMcpPool();
-    loadMcps();
-  }, [account]);
 
   // Load MCPs from the contract
   const loadMcps = async () => {
@@ -216,6 +194,28 @@ export default function DaoGovernance() {
       setLoading(false);
     }
   };
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // mcpPool이 없을 때 초기화
+  useEffect(() => {
+    initializeMcpPool();
+    loadMcps();
+  }, [account, initializeMcpPool, loadMcps]);
 
   // Load proposals from the contract
   const loadProposals = async () => {

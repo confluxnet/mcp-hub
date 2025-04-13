@@ -146,10 +146,13 @@ export default function McpPage({ params }: { params: { id: string } }) {
                       <TabsTrigger value="shell">Shell</TabsTrigger>
                     </TabsList>
                     <TabsContent value="mcp_server_connection">
-                      <CodeBlock language="json" code={mcp.codeExamples.mcp_server_connection} />
+                      <CodeBlock
+                        language="json"
+                        code={mcp.codeExamples?.mcp_server_connection || ""}
+                      />
                     </TabsContent>
                     <TabsContent value="shell">
-                      <CodeBlock language="shell" code={mcp.codeExamples.shell} />
+                      <CodeBlock language="shell" code={mcp.codeExamples?.shell || ""} />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
