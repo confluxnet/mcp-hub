@@ -153,7 +153,7 @@ export default function Home() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [loadMcps]);
+  }, []);
 
   // Find MCPs based on use case
   const findMcpsForUseCase = async () => {
