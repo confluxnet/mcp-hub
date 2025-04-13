@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import type { Eip1193Provider } from "ethers";
+import { formatEther, parseEther } from "ethers/lib/utils";
+// Define a custom type for MetaMask provider
+interface Eip1193Provider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
@@ -194,61 +198,61 @@ export default function Home() {
   };
 
   // Use an MCP
-  const handleUseMcp = async (mcp: MCP) => {
-    if (!mcpPool || !billingSystem) return;
+  // const handleUseMcp = async (mcp: MCP) => {
+  //   if (!mcpPool || !billingSystem) return;
 
-    try {
-      setLoading(true);
-      setSelectedMcp(mcp);
+  //   try {
+  //     setLoading(true);
+  //     setSelectedMcp(mcp);
 
-      // Process payment
-      const priceInWei = ethers.parseEther(mcp.price.toString());
-      const tx = await billingSystem.processPayment(mcp.owner, priceInWei);
-      await tx.wait();
+  //     // Process payment
+  //     const priceInWei = parseEther(mcp.price.toString());
+  //     const tx = await billingSystem.processPayment(mcp.owner, priceInWei);
+  //     await tx.wait();
 
-      // Call the MCP API (this is a placeholder)
-      // In a real implementation, you would call the actual API endpoint
-      const response = await fetch(mcp.apiEndpoints[0], {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ useCase }),
-      });
+  //     // Call the MCP API (this is a placeholder)
+  //     // In a real implementation, you would call the actual API endpoint
+  //     const response = await fetch(mcp.apiEndpoints[0], {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ useCase }),
+  //     });
 
-      const data = await response.json();
-      setApiResponse(JSON.stringify(data, null, 2));
+  //     const data = await response.json();
+  //     setApiResponse(JSON.stringify(data, null, 2));
 
-      // Update usage stats
-      setUsageStats((prev) => ({
-        total: prev.total + 1,
-        today: prev.today + 1,
-      }));
+  //     // Update usage stats
+  //     setUsageStats((prev) => ({
+  //       total: prev.total + 1,
+  //       today: prev.today + 1,
+  //     }));
 
-      // Update token balance
-      if (sagaToken && account) {
-        const newBalance = await sagaToken.balanceOf(account);
-        setTokenBalance(ethers.formatEther(newBalance));
-      }
+  //     // Update token balance
+  //     if (sagaToken && account) {
+  //       const newBalance = await sagaToken.balanceOf(account);
+  //       setTokenBalance(formatEther(newBalance));
+  //     }
 
-      toast({
-        title: "MCP Used Successfully",
-        description: `You have used ${mcp.title} and paid ${mcp.price} SAGA tokens`,
-      });
+  //     toast({
+  //       title: "MCP Used Successfully",
+  //       description: `You have used ${mcp.title} and paid ${mcp.price} SAGA tokens`,
+  //     });
 
-      // Reload MCPs to update usage count
-      await loadMcps();
-    } catch (error) {
-      console.error("Error using MCP:", error);
-      toast({
-        title: "Error",
-        description: "Failed to use MCP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Reload MCPs to update usage count
+  //     await loadMcps();
+  //   } catch (error) {
+  //     console.error("Error using MCP:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to use MCP. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -348,7 +352,7 @@ export default function Home() {
           </div>
 
           {/* Original MCP Cards Grid */}
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <h2 className="text-xl font-bold mb-4">Available MCPs</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mcps.map((mcp) => (
@@ -380,7 +384,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter>
                     <Button
-                      onClick={() => handleUseMcp(mcp)}
+                      // onClick={() => handleUseMcp(mcp)}
                       disabled={loading || !mcp.approved || !mcp.active}
                       className="w-full"
                     >
@@ -390,7 +394,7 @@ export default function Home() {
                 </Card>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </main>
     </div>

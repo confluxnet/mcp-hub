@@ -1,9 +1,22 @@
 import { createWalletClient, createPublicClient, custom, http } from 'viem';
 import { mainnet } from 'viem/chains';
+import { rootstock, rootstockTestnet } from './rootstockChains';
 
 // Configure Ethereum provider
 export const publicClient = createPublicClient({
   chain: mainnet,
+  transport: http()
+});
+
+// Configure Rootstock provider
+export const rootstockPublicClient = createPublicClient({
+  chain: rootstock,
+  transport: http()
+});
+
+// Configure Rootstock Testnet provider
+export const rootstockTestnetPublicClient = createPublicClient({
+  chain: rootstockTestnet,
   transport: http()
 });
 

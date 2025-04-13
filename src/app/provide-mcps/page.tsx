@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import type { Eip1193Provider } from "ethers";
+import { formatEther, parseEther } from "ethers/lib/utils";
+// Define a custom type for MetaMask provider
+interface Eip1193Provider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
@@ -243,7 +247,9 @@ export default function ProvideMcps() {
       }
 
       // Convert price to Wei
-      const priceInWei = ethers.parseEther(selectedMcp.price.toString());
+      const priceInWei = parseEther(selectedMcp.price.toString());
+      
+      // Debug logs if needed
       console.log("[DEBUG] priceInWei", priceInWei);
       console.log("[DEBUG] selectedMcp.apiEndpoints", selectedMcp.apiEndpoints);
       console.log("[DEBUG] selectedMcp.codeExamples", selectedMcp.codeExamples);
