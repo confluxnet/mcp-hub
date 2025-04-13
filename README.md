@@ -5,7 +5,7 @@
 ## Live Demo & Links
 
 *   **Web Application:** [mcp-hub-topaz.vercel.app](https://mcp-hub-topaz.vercel.app/)
-*   **GitHub Repositories:** [https://github.com/wryta](https://github.com/wryta) (*Note: Link updated based on context*)
+*   **GitHub Repositories:** [https://github.com/orgs/confluxnet/repositories](https://github.com/orgs/confluxnet/repositories) (*Note: Link updated based on context*)
 *   **YouTube Demos:**
     *   Agent Builder Flow: [https://youtu.be/ILxILEeikMY](https://youtu.be/ILxILEeikMY)
     *   Agent Explorer Flow: [https://youtu.be/ipJ_9rRJBe4](https://youtu.be/ipJ_9rRJBe4)
