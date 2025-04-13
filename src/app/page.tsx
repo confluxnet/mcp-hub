@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import type { Eip1193Provider } from "ethers";
+import { formatEther, parseEther } from "ethers/lib/utils";
+// Define a custom type for MetaMask provider
+interface Eip1193Provider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
@@ -153,7 +157,104 @@ export default function Home() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [loadMcps]);
+  }, []);
+
+  // Load MCPs from Firestore and contract if available
+  const loadMcps = async () => {
+    try {
+      setLoading(true);
+
+      // First try to fetch from Firestore
+      try {
+        // Fetch MCPs from Firestore
+        const response = await fetch("/api/mcp-list");
+        const result = await response.json();
+        console.log("result", result);
+
+        if (result.mcps) {
+          // Filter only approved and active MCPs
+          const approvedMcps = result.mcps.filter((mcp: MCP) => mcp.approved && mcp.active);
+          setMcps(approvedMcps);
+        } else {
+          console.error("No MCPs found in Firestore");
+          // If no MCPs in Firestore, try contract if available
+          if (mcpPool) {
+            await loadMcpsFromContract();
+          } else {
+            setMcps([]);
+            toast({
+              title: "Warning",
+              description: "Could not load MCPs from Firestore.",
+              variant: "destructive",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading MCPs from Firestore:", error);
+        // If Firestore fetch fails, try contract if available
+        if (mcpPool) {
+          await loadMcpsFromContract();
+        } else {
+          setMcps([]);
+          toast({
+            title: "Error",
+            description: "Failed to load MCPs. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error in loadMcps:", error);
+      setMcps([]);
+      toast({
+        title: "Error",
+        description: "Failed to load MCPs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load MCPs from the contract
+  const loadMcpsFromContract = async () => {
+    if (!mcpPool) return;
+
+    try {
+      // This is a placeholder - you'll need to implement the actual contract call
+      const mcpsData = await mcpPool.getMCP(0);
+
+      const formattedMcps: MCP[] = mcpsData.map((mcp: any) => ({
+        id: mcp.id,
+        title: mcp.title,
+        description: mcp.description,
+        tags: mcp.tags || [],
+        icon: mcp.icon,
+        category: mcp.category,
+        usageCount: mcp.usageCount.toNumber(),
+        rating: mcp.rating,
+        price: parseFloat(formatEther(mcp.price)),
+        owner: mcp.owner,
+        approved: mcp.approved,
+        active: mcp.active,
+        apiEndpoints: mcp.apiEndpoints || [],
+        revenue: parseFloat(formatEther(mcp.revenue)),
+        codeExamples: mcp.codeExamples,
+      }));
+
+      setMcps(formattedMcps);
+    } catch (mcpError) {
+      console.error("Error loading MCPs from contract:", mcpError);
+      // Set empty array if there's an error
+      setMcps([]);
+      toast({
+        title: "Warning",
+        description:
+          "Could not load MCPs. The contract might not be deployed or the address might be incorrect.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Find MCPs based on use case
   const findMcpsForUseCase = async () => {
@@ -202,7 +303,7 @@ export default function Home() {
       setSelectedMcp(mcp);
 
       // Process payment
-      const priceInWei = ethers.parseEther(mcp.price.toString());
+      const priceInWei = parseEther(mcp.price.toString());
       const tx = await billingSystem.processPayment(mcp.owner, priceInWei);
       await tx.wait();
 
@@ -228,7 +329,7 @@ export default function Home() {
       // Update token balance
       if (sagaToken && account) {
         const newBalance = await sagaToken.balanceOf(account);
-        setTokenBalance(ethers.formatEther(newBalance));
+        setTokenBalance(formatEther(newBalance));
       }
 
       toast({

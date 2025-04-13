@@ -136,10 +136,10 @@ function StoryProtocolContent() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Story Protocol MCP Recipes</h1>
+              <h1 className="text-3xl font-bold mb-2">MCP Recipes</h1>
               <p className="text-muted-foreground">
                 Curated recipes that bundle multiple MCPs together with step-by-step integration
-                guides, registered as IP on Story Protocol.
+                guides, registered as IP on Story Protocol and RootStock.
               </p>
             </div>
             <Button className="mt-4 lg:mt-0" onClick={handleCreateRecipe}>

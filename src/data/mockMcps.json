@@ -539,6 +539,27 @@
         "python": "# Example Python implementation\nfrom near_price_alert import NearPriceAlertClient\n\nclient = NearPriceAlertClient(api_key='your-api-key')\n\n# Set a price alert\nalert_response = client.set_price_alert(\n    target=3.0,\n    direction='above',  # 'above' or 'below'\n    notification_method='webhook',\n    webhook_url='https://your-server.com/webhook'\n)\n\n# Check current status\nstatus_response = client.check_status()\n\n# Cancel an alert\ncancel_response = client.cancel_alert(alert_response['alert_id'])",
         "shell": "# Example Shell implementation\n# Set a price alert\ncurl -X POST 'https://api.mcp.dog/v1/near-price-alert/set' \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"target\": 3.0,\n    \"direction\": \"above\",\n    \"notification_method\": \"webhook\",\n    \"webhook_url\": \"https://your-server.com/webhook\"\n  }'\n\n# Check current status\ncurl -X GET 'https://api.mcp.dog/v1/near-price-alert/status' \\\n  -H \"Authorization: Bearer your-api-key\"\n\n# Cancel an alert\ncurl -X DELETE 'https://api.mcp.dog/v1/near-price-alert/cancel/ALERT_ID' \\\n  -H \"Authorization: Bearer your-api-key\""
       }
+    },
+    {
+      "id": "23",
+      "title": "Upstage Web3 MCP",
+      "description": "Advanced integration protocol for Upstage AI models with Web3 applications, featuring on-chain model inference verification and decentralized fine-tuning capabilities. This protocol enhances trustworthiness in AI computations through Zero-Knowledge proofs.",
+      "tags": ["AI", "Web3", "Upstage", "Zero-Knowledge"],
+      "icon": "🚀",
+      "category": "AI",
+      "usageCount": 5678,
+      "rating": 4.8,
+      "price": 15,
+      "owner": "0x8765432109876543210987654321098765432109",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/upstage-web3"],
+      "revenue": 85170,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { UpstageWeb3Client } from '@mcp/upstage-web3';\n\nconst client = new UpstageWeb3Client({\n  apiKey: 'your-api-key'\n});\n\n// Execute an AI inference with on-chain verification\nconst result = await client.runInference({\n  modelId: 'upstage-solar-10.7b',\n  prompt: 'Explain the benefits of zkML for Web3 applications',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000,\n    verificationLevel: 'zk-proof'\n  },\n  storeOnChain: true,\n  chainId: 1 // Ethereum Mainnet\n});",
+        "python": "# Example Python implementation\nfrom upstage_web3_client import UpstageWeb3Client\n\nclient = UpstageWeb3Client(api_key='your-api-key')\n\n# Execute an AI inference with on-chain verification\nresult = client.run_inference(\n    model_id='upstage-solar-10.7b',\n    prompt='Explain the benefits of zkML for Web3 applications',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000,\n        'verification_level': 'zk-proof'\n    },\n    store_on_chain=True,\n    chain_id=1  # Ethereum Mainnet\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/upstage-web3/inference \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"modelId\": \"upstage-solar-10.7b\",\n    \"prompt\": \"Explain the benefits of zkML for Web3 applications\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"maxTokens\": 1000,\n      \"verificationLevel\": \"zk-proof\"\n    },\n    \"storeOnChain\": true,\n    \"chainId\": 1\n  }'"
+      }
     }
   ]
 }
