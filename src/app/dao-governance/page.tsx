@@ -142,7 +142,7 @@ export default function DaoGovernance() {
 
     try {
       setLoading(true);
-      const mcpsCount = await poolToUse.getMcpsCount();
+      const mcpsCount = (await poolToUse?.getMcpsCount()) || 1;
       const formattedMcps: MCP[] = [];
 
       for (let i = 0; i < mcpsCount; i++) {
