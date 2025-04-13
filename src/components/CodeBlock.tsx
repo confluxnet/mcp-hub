@@ -36,7 +36,10 @@ export function CodeBlock({ language, code }: CodeBlockProps) {
         customStyle={{
           margin: 0,
           borderRadius: "0.5rem",
-          padding: "1rem",
+          paddingTop: "0.825rem",
+          paddingBottom: "1rem",
+          paddingLeft: "1rem",
+          paddingRight: "3rem",
         }}
       >
         {code}

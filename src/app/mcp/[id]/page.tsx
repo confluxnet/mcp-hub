@@ -122,7 +122,7 @@ export default function McpPage({ params }: { params: { id: string } }) {
                         </p>
                         <CodeBlock
                           language="shell"
-                          code="Authorization: Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8"
+                          code="Bearer mcp_sk_live_51NxK8vKj2LmNpQrS5tYwX7ZcA9bD3fE6hJ8kM1nP4qR7sT0uV3wX5yZ8"
                         />
                       </div>
                     </div>
