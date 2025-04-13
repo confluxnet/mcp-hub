@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import * as ethers from "ethers";
-import type { Eip1193Provider } from "ethers";
+import { ethers } from "ethers";
+import { formatEther } from "ethers/lib/utils";
+// Define a custom type for MetaMask provider
+interface Eip1193Provider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 import { useToast } from "@/components/ui/use-toast";
 
 // Import contract ABIs
@@ -103,7 +107,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       })) as string[];
 
       // Check if we're on the correct network
-      const provider = new ethers.BrowserProvider(ethereum);
+      const provider = new ethers.providers.Web3Provider(ethereum as any);
       const network = await provider.getNetwork();
       const currentChainId = network.chainId.toString(16);
 
@@ -150,7 +154,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       }
 
       // Get the updated provider and signer after network switch
-      const updatedProvider = new ethers.BrowserProvider(ethereum);
+      const updatedProvider = new ethers.providers.Web3Provider(ethereum as any);
       const signer = await updatedProvider.getSigner();
       const account = accounts[0];
 
@@ -168,7 +172,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       console.log("[DEBUG] account", account);
       const balance = await sagaTokenContract.balanceOf(account);
       console.log(balance);
-      const formattedBalance = ethers.formatEther(balance);
+      const formattedBalance = formatEther(balance);
       console.log("[DEBUG] formattedBalance", formattedBalance);
 
       // Update state

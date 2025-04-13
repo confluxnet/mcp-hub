@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import type { Eip1193Provider } from "ethers";
+import { formatEther, parseEther } from "ethers/lib/utils";
+// Define a custom type for MetaMask provider
+interface Eip1193Provider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 import { Header } from "@/components/header";
 import { Aside } from "@/components/aside";
 import {
@@ -147,27 +151,48 @@ export default function DaoGovernance() {
         const mcpData = await poolToUse.getMCP(0);
         console.log("MCP Data:", mcpData);
 
-        // 단일 객체를 배열로 변환하여 처리
-        const formattedMcps: MCP[] = [
-          {
-            id: mcpData.id || "0",
-            title: mcpData.name || "Untitled MCP",
-            description: mcpData.description || "No description available",
-            usageCount: 0,
-            price: 3,
-            owner: mcpData.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
-            approved: mcpData.approved || false,
-            active: mcpData.active || false,
-            apiEndpoints: mcpData.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
-            codeExamples: {},
-            tags: [],
-            icon: "",
-            category: "",
-            revenue: 0,
-          },
-        ];
-
-        console.log("[DEBUG] formattedMcps", formattedMcps);
+        // Check if mcpData is an array
+        if (Array.isArray(mcpData)) {
+          // Handle array of MCPs
+          const formattedMcps: MCP[] = mcpData.map((mcp: any) => ({
+            id: mcp.id,
+            title: mcp.title,
+            description: mcp.description,
+            tags: mcp.tags || [],
+            icon: mcp.icon,
+            category: mcp.category,
+            usageCount: mcp.usageCount.toNumber(),
+            rating: mcp.rating,
+            price: parseFloat(formatEther(mcp.price)),
+            owner: mcp.owner,
+            approved: mcp.approved,
+            active: mcp.active,
+            apiEndpoints: mcp.apiEndpoints || [],
+            revenue: parseFloat(formatEther(mcp.revenue)),
+            codeExamples: mcp.codeExamples,
+          }));
+        } else {
+          // Handle single MCP object
+          const formattedMcps: MCP[] = [
+            {
+              id: mcpData.id || "0",
+              title: mcpData.name || "Untitled MCP",
+              description: mcpData.description || "No description available",
+              usageCount: 0,
+              price: 3,
+              owner: mcpData.owner || "0xCd5202548Ee775FfDB3450A4EcFd1BcC05C88CB7",
+              approved: mcpData.approved || false,
+              active: mcpData.active || false,
+              apiEndpoints: mcpData.apiEndpoints || ["https://f1uyuh74gnj0c7-8000.proxy.runpod.net"],
+              codeExamples: {},
+              tags: [],
+              icon: "",
+              category: "",
+              revenue: 0,
+            },
+          ];
+          console.log("[DEBUG] formattedMcps", formattedMcps);
+        }
 
         setMcps(formattedMcps);
         setPendingMcps(formattedMcps.filter((mcp) => !mcp.approved));
@@ -234,8 +259,8 @@ export default function DaoGovernance() {
           proposer: proposal.proposer,
           startTime: proposal.startTime.toNumber(),
           endTime: proposal.endTime.toNumber(),
-          forVotes: parseFloat(ethers.formatEther(proposal.forVotes)),
-          againstVotes: parseFloat(ethers.formatEther(proposal.againstVotes)),
+          forVotes: parseFloat(formatEther(proposal.forVotes)),
+          againstVotes: parseFloat(formatEther(proposal.againstVotes)),
           executed: proposal.executed,
           status: proposal.executed
             ? "executed"
@@ -412,7 +437,7 @@ export default function DaoGovernance() {
       const tx = await sagaDao.propose(
         [poolToUse.address], // targets: MCPPool 컨트랙트 주소
         [0], // values: ETH 전송량 (0으로 설정)
-        [ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [selectedMcp?.id || 0])], // calldatas: approveMCP 함수 호출 데이터
+        ["0x0000000000000000000000000000000000000000000000000000000000000000"], // calldatas: placeholder for now
         newProposal.description // description: 제안 설명
       );
       await tx.wait();

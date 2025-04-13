@@ -67,6 +67,190 @@
           }
         }
       }
+    },
+    {
+      "id": "2",
+      "title": "Upstage Web3 MCP",
+      "description": "Advanced integration protocol for Upstage AI models with Web3 applications, featuring on-chain model inference verification and decentralized fine-tuning capabilities. This protocol enhances trustworthiness in AI computations through Zero-Knowledge proofs.",
+      "tags": ["AI", "Web3", "Upstage", "Zero-Knowledge"],
+      "icon": "🚀",
+      "category": "AI",
+      "usageCount": 5678,
+      "rating": 4.8,
+      "price": 15,
+      "owner": "0x8765432109876543210987654321098765432109",
+      "approved": true,
+      "active": true,
+      "apiEndpoints": ["https://api.mcp.dog/v1/upstage-web3"],
+      "revenue": 85170,
+      "codeExamples": {
+        "typescript": "// Example TypeScript implementation\nimport { UpstageWeb3Client } from '@mcp/upstage-web3';\n\nconst client = new UpstageWeb3Client({\n  apiKey: 'your-api-key'\n});\n\n// Execute an AI inference with on-chain verification\nconst result = await client.runInference({\n  modelId: 'upstage-solar-10.7b',\n  prompt: 'Explain the benefits of zkML for Web3 applications',\n  parameters: {\n    temperature: 0.7,\n    maxTokens: 1000,\n    verificationLevel: 'zk-proof'\n  },\n  storeOnChain: true,\n  chainId: 1 // Ethereum Mainnet\n});",
+        "python": "# Example Python implementation\nfrom upstage_web3_client import UpstageWeb3Client\n\nclient = UpstageWeb3Client(api_key='your-api-key')\n\n# Execute an AI inference with on-chain verification\nresult = client.run_inference(\n    model_id='upstage-solar-10.7b',\n    prompt='Explain the benefits of zkML for Web3 applications',\n    parameters={\n        'temperature': 0.7,\n        'max_tokens': 1000,\n        'verification_level': 'zk-proof'\n    },\n    store_on_chain=True,\n    chain_id=1  # Ethereum Mainnet\n)",
+        "shell": "# Example Shell implementation\ncurl -X POST https://api.mcp.dog/v1/upstage-web3/inference \\\n  -H \"Authorization: Bearer your-api-key\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"modelId\": \"upstage-solar-10.7b\",\n    \"prompt\": \"Explain the benefits of zkML for Web3 applications\",\n    \"parameters\": {\n      \"temperature\": 0.7,\n      \"maxTokens\": 1000,\n      \"verificationLevel\": \"zk-proof\"\n    },\n    \"storeOnChain\": true,\n    \"chainId\": 1\n  }'"
+      },
+      "openApiJson": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Upstage Web3 API",
+          "version": "1.0.0",
+          "description": "API for integrating Upstage AI models with Web3 applications"
+        },
+        "servers": [
+          {
+            "url": "https://api.mcp.dog/v1",
+            "description": "Production API"
+          }
+        ],
+        "paths": {
+          "/upstage-web3/inference": {
+            "post": {
+              "summary": "Run model inference with Web3 verification",
+              "description": "Executes an AI inference using Upstage models with on-chain verification",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "modelId": {
+                          "type": "string",
+                          "description": "The Upstage AI model to use"
+                        },
+                        "prompt": {
+                          "type": "string",
+                          "description": "The input prompt for the model"
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "properties": {
+                            "temperature": {
+                              "type": "number",
+                              "description": "The temperature for the AI model"
+                            },
+                            "maxTokens": {
+                              "type": "number",
+                              "description": "Maximum number of tokens to generate"
+                            },
+                            "verificationLevel": {
+                              "type": "string",
+                              "description": "Level of verification to apply",
+                              "enum": ["none", "hash-only", "zk-proof"]
+                            }
+                          }
+                        },
+                        "storeOnChain": {
+                          "type": "boolean",
+                          "description": "Whether to store the inference result on chain"
+                        },
+                        "chainId": {
+                          "type": "number",
+                          "description": "The blockchain network to use"
+                        }
+                      },
+                      "required": ["modelId", "prompt"]
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Successful inference",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "result": {
+                            "type": "string",
+                            "description": "The generated text from the model"
+                          },
+                          "verificationProof": {
+                            "type": "string",
+                            "description": "Zero-knowledge proof or hash of the inference"
+                          },
+                          "transactionHash": {
+                            "type": "string",
+                            "description": "Transaction hash if stored on chain"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/upstage-web3/finetune": {
+            "post": {
+              "summary": "Launch a decentralized fine-tuning job",
+              "description": "Starts a fine-tuning job for an Upstage model using decentralized computation",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "baseModelId": {
+                          "type": "string",
+                          "description": "The base Upstage model to fine-tune"
+                        },
+                        "trainingDataCID": {
+                          "type": "string",
+                          "description": "IPFS CID of the training data"
+                        },
+                        "hyperparameters": {
+                          "type": "object",
+                          "description": "Fine-tuning hyperparameters"
+                        },
+                        "computeProvider": {
+                          "type": "string",
+                          "enum": ["decentralized", "upstage-cloud"],
+                          "description": "Where to run the computation"
+                        }
+                      },
+                      "required": ["baseModelId", "trainingDataCID"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/upstage-web3/verify": {
+            "post": {
+              "summary": "Verify an AI model output",
+              "description": "Verifies that an AI model output was generated by the claimed model",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "modelId": {
+                          "type": "string",
+                          "description": "The claimed model ID"
+                        },
+                        "prompt": {
+                          "type": "string",
+                          "description": "The input prompt"
+                        },
+                        "output": {
+                          "type": "string",
+                          "description": "The output to verify"
+                        },
+                        "proof": {
+                          "type": "string",
+                          "description": "The verification proof to check"
+                        }
+                      },
+                      "required": ["modelId", "prompt", "output", "proof"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }
